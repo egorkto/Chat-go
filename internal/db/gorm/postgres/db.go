@@ -2,11 +2,9 @@ package db_gorm_postgres
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/egorkto/Chat-go/internal/db"
-	"github.com/egorkto/Chat-go/internal/domain"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -37,7 +35,7 @@ func New(cfg db.Config) (*DB, error) {
 	}, nil
 }
 
-func (db *DB) WithTimeoutContextBasedOn(ctx context.Context) context.CancelFunc {
+func (db *DB) WithTimeoutContext(ctx context.Context) context.CancelFunc {
 	timeoutCtx, cancel := context.WithTimeout(ctx, db.cfg.Timeout)
 
 	db.DB = db.DB.WithContext(timeoutCtx)
@@ -48,17 +46,5 @@ func (db *DB) WithTimeoutContextBasedOn(ctx context.Context) context.CancelFunc 
 func (db *DB) Create(dest interface{}) error {
 	result := db.DB.Create(dest)
 	err := result.Error
-	if err != nil {
-		switch {
-		case errors.Is(err, gorm.ErrCheckConstraintViolated):
-			return domain.ErrConflict
-		case errors.Is(err, gorm.ErrDuplicatedKey):
-			return domain.ErrInvalidArgument
-		case errors.Is(err, gorm.ErrRecordNotFound):
-			return domain.ErrNotFound
-		default:
-			return err
-		}
-	}
-	return nil
+	return MapError(err)
 }

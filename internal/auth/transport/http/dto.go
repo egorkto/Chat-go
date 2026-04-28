@@ -2,7 +2,7 @@ package auth_transport
 
 type SignUpRequest struct {
 	FullName string `json:"full_name" validate:"required,min=3,max=20"`
-	Password string `json:"password" validate:"required,min=8,max=30"`
+	Password string `json:"password" validate:"required,min=5,max=100"`
 }
 
 type SignUpResponse struct {

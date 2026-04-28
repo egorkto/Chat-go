@@ -32,7 +32,7 @@ func NewJWTGenerator(cfg JWTConfig) (JWTGenerator, error) {
 	}, nil
 }
 
-func (g *JWTGenerator) Generate(u domain.User) (domain.JWT, error) {
+func (g JWTGenerator) Generate(u domain.User) (domain.JWT, error) {
 	subject := fmt.Sprintf("%s:%v", u.FullName(), u.ID())
 
 	accessIssued := jwt.NewNumericDate(time.Now())

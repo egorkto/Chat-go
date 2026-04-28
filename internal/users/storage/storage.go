@@ -1,14 +1,14 @@
 package users_storage
 
 import (
-	db_gorm_postgres "github.com/egorkto/Chat-go/internal/db/gorm/postgres"
+	db_gorm "github.com/egorkto/Chat-go/internal/db/gorm"
 )
 
 type UsersStorage struct {
-	db *db_gorm_postgres.DB
+	db db_gorm.DB
 }
 
-func New(db *db_gorm_postgres.DB) *UsersStorage {
+func New(db db_gorm.DB) *UsersStorage {
 	return &UsersStorage{
 		db: db,
 	}
