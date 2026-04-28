@@ -3,13 +3,21 @@ package auth_service
 import (
 	"context"
 
-	"github.com/egorkto/Chat-go/internal/auth"
 	"github.com/egorkto/Chat-go/internal/domain"
 )
 
 type AuthService struct {
-	generator auth.JWTGenerator
+	generator JWTGenerator
 	storage   UsersStorage
+	validator Validator
+}
+
+type JWTGenerator interface {
+	Generate(u domain.User) (domain.JWT, error)
+}
+
+type Validator interface {
+	ValidatePassword(pass string, name string) error
 }
 
 type UsersStorage interface {
@@ -20,9 +28,10 @@ type UsersStorage interface {
 	) (domain.User, error)
 }
 
-func New(g auth.JWTGenerator, storage UsersStorage) *AuthService {
+func New(g JWTGenerator, s UsersStorage, v Validator) *AuthService {
 	return &AuthService{
 		generator: g,
-		storage:   storage,
+		storage:   s,
+		validator: v,
 	}
 }

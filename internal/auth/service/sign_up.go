@@ -6,7 +6,6 @@ import (
 
 	"github.com/egorkto/Chat-go/internal/auth"
 	"github.com/egorkto/Chat-go/internal/domain"
-	"github.com/egorkto/Chat-go/validate"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -19,7 +18,7 @@ func (s *AuthService) SignUp(
 		return domain.User{}, domain.JWT{}, fmt.Errorf("validating user: %w", err)
 	}
 
-	if err := validate.ValidatePassword(creds.Password, user.FullName()); err != nil {
+	if err := s.validator.ValidatePassword(creds.Password, user.FullName()); err != nil {
 		return domain.User{}, domain.JWT{}, fmt.Errorf("validating password: %w", err)
 	}
 

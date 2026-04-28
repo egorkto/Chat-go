@@ -17,6 +17,7 @@ import (
 	"github.com/egorkto/Chat-go/internal/http_server"
 	"github.com/egorkto/Chat-go/internal/logger"
 	users_storage "github.com/egorkto/Chat-go/internal/users/storage"
+	"github.com/egorkto/Chat-go/validator"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
 	"github.com/presbrey/pkg/echovalidator"
@@ -60,8 +61,10 @@ func main() {
 		os.Exit(1)
 	}
 
+	validator := validator.New()
+
 	usersStorage := users_storage.New(db)
-	authService := auth_service.New(jwtGenerator, usersStorage)
+	authService := auth_service.New(jwtGenerator, usersStorage, validator)
 	authTransport := auth_transport.New(authService)
 
 	echo_utils.AddMany(e, authTransport.Routes())

@@ -13,7 +13,7 @@ func (s *UsersStorage) CreateUser(
 	user domain.User,
 	password string,
 ) (domain.User, error) {
-	cancel := s.db.WithTimeoutContextBasedOn(ctx)
+	cancel := s.db.WithTimeoutContext(ctx)
 	defer cancel()
 
 	model := db_gorm.UserModel{

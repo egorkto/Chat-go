@@ -1,6 +1,7 @@
 package auth_transport
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -19,7 +20,7 @@ func (h *HTTPHandler) SignUp(e *echo.Context) error {
 
 	if err := e.Validate(request); err != nil {
 		e.Logger().Error("validate request", slog.String("err", err.Error()))
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to validate request")
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("failed to validate request: %s", err.Error()))
 	}
 
 	domainUser := domain.NewUninitializedUser(request.FullName)
