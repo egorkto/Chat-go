@@ -1,0 +1,90 @@
+basePath: /
+definitions:
+  github_com_egorkto_Chat-go_internal_echo.ErrorResponse:
+    properties:
+      error:
+        example: error details
+        type: string
+      message:
+        example: failed to proccess request
+        type: string
+    type: object
+  internal_auth_transport_http.SignUpRequest:
+    properties:
+      full_name:
+        example: Иван Иванов
+        maxLength: 20
+        minLength: 3
+        type: string
+      password:
+        example: Qwer1234?,4
+        maxLength: 100
+        minLength: 5
+        type: string
+    required:
+    - full_name
+    - password
+    type: object
+  internal_auth_transport_http.SignUpResponse:
+    properties:
+      access_token:
+        example: access_token_example
+        type: string
+      refresh_token:
+        example: refresh_token_example
+        type: string
+      user:
+        $ref: '#/definitions/internal_auth_transport_http.UserDTO'
+    type: object
+  internal_auth_transport_http.UserDTO:
+    properties:
+      full_name:
+        example: Иван Иванов
+        type: string
+      id:
+        example: 1
+        type: integer
+      version:
+        example: 1
+        type: integer
+    type: object
+host: localhost:5845
+info:
+  contact:
+    name: Egor
+    url: http://github.com/egorkto
+  description: Chat go
+  title: Chat API
+  version: "0.1"
+paths:
+  /sign-up:
+    post:
+      consumes:
+      - application/json
+      description: Создает новую учетную запись пользователя
+      parameters:
+      - description: Данные регистрации
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_auth_transport_http.SignUpRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Успешная регистрация
+          schema:
+            $ref: '#/definitions/internal_auth_transport_http.SignUpResponse'
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/github_com_egorkto_Chat-go_internal_echo.ErrorResponse'
+        "409":
+          description: Пользователь уже существует
+          schema:
+            $ref: '#/definitions/github_com_egorkto_Chat-go_internal_echo.ErrorResponse'
+      summary: Регистрация нового пользователя
+      tags:
+      - users
+swagger: "2.0"
