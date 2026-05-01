@@ -13,16 +13,24 @@ import (
 	auth_transport "github.com/egorkto/Chat-go/internal/auth/transport/http"
 	"github.com/egorkto/Chat-go/internal/db"
 	db_gorm_postgres "github.com/egorkto/Chat-go/internal/db/gorm/postgres"
-	echo_utils "github.com/egorkto/Chat-go/internal/echo/utils.go"
+	echo_router "github.com/egorkto/Chat-go/internal/echo/router"
+	echo_utils "github.com/egorkto/Chat-go/internal/echo/utils"
 	"github.com/egorkto/Chat-go/internal/http_server"
 	"github.com/egorkto/Chat-go/internal/logger"
 	users_storage "github.com/egorkto/Chat-go/internal/users/storage"
 	"github.com/egorkto/Chat-go/validator"
-	"github.com/labstack/echo/v5"
-	"github.com/labstack/echo/v5/middleware"
-	"github.com/presbrey/pkg/echovalidator"
+	echoSwagger "github.com/swaggo/echo-swagger/v2"
+
+	_ "github.com/egorkto/Chat-go/docs"
 )
 
+// @title           Chat API
+// @version         0.1
+// @description     Chat go
+// @contact.name   Egor
+// @contact.url    http://github.com/egorkto
+// @host      localhost:5845
+// @BasePath  /
 func main() {
 	ctx, cancel := signal.NotifyContext(
 		context.Background(),
@@ -47,11 +55,7 @@ func main() {
 	}
 
 	logger.Debug("Initializing echo router")
-	e := echo.New()
-	e.Logger = logger.Logger
-	e.Validator = echovalidator.New()
-	e.Use(middleware.RequestLogger())
-	e.Use(middleware.Recover())
+	e := echo_router.NewRouter(logger.Logger)
 
 	logger.Debug("Initializing jwt generator")
 	jwtCfg := auth.NewJWTConfigMust()
@@ -68,6 +72,7 @@ func main() {
 	authTransport := auth_transport.New(authService)
 
 	echo_utils.AddMany(e, authTransport.Routes())
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	logger.Debug("Initializing HTTP server")
 	serverCfg := http_server.NewConfigMust()

@@ -6,6 +6,18 @@ export PROJECT_ROOT=$(shell pwd)
 up-db:
 	@docker compose up -d postgres-db
 
+cleanup-db:
+	@read -p "Clean all volume files? Data may be lost. [y/N]: " ans; \
+	if [ "$$ans" = "y" ]; then \
+		docker compose down postgres-db port-forwarder -v && \
+		echo "Env was cleaned"; \
+	else \
+		echo "Clean canceled"; \
+	fi
+
+down-db:
+	@docker compose down postgres-db
+
 forward-port:
 	@docker compose up -d port-forwarder
 
@@ -55,3 +67,10 @@ clean-logs:
 	else \
 		echo "Clean canceled"; \
 	fi
+
+run-swag:
+	@swag init \
+		-g cmd/chat/main.go \
+	 	-o docs \
+		--parseInternal \
+		--parseDependency \
