@@ -50,11 +50,11 @@ func (u User) FullName() string {
 }
 
 func (u User) Validate() error {
-	nameLen := len([]byte(u.fullName))
+	nameLen := len([]rune(u.fullName))
 	if nameLen < 3 || nameLen > 20 {
 		return fmt.Errorf(
-			"validating user: %s: %w",
-			"invalid 'FullName' length",
+			"invalid 'FullName' length %d: %w",
+			nameLen,
 			ErrInvalidArgument,
 		)
 	}

@@ -8,7 +8,7 @@ import (
 )
 
 func (v Validator) ValidatePassword(password string, fullName string) error {
-	lenPass := len([]byte(password))
+	lenPass := len([]rune(password))
 	if lenPass > 100 || lenPass == 0 {
 		return fmt.Errorf(
 			"password length must be between 0 and 101: %w",
