@@ -13,12 +13,12 @@ import (
 )
 
 func TestDuplicateUser(t *testing.T) {
-	db := tests_postgres.NewDB(10*time.Second, t)
+	db := tests_postgres.NewDB(10*time.Second, "migrations/init.sql", t)
 	storage := users_storage.New(db)
 	ctx := context.Background()
 
-	t.Run("Test unique full name constraint", func(t *testing.T) {
-		user := domain.NewUser(0, 0, gofakeit.Name())
+	t.Run("Test unique login constraint", func(t *testing.T) {
+		user := domain.NewUser(0, 0, gofakeit.Name(), gofakeit.Username())
 		password := gofakeit.Password(true, true, true, true, true, 10)
 
 		_, err := storage.CreateUser(ctx, user, password)

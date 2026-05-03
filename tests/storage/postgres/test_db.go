@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	db_gorm_postgres "github.com/egorkto/Chat-go/internal/db/gorm/postgres"
+	storage_postgres_gorm "github.com/egorkto/Chat-go/internal/storage/postgres/gorm"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	gorm_postgres "gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -18,7 +18,7 @@ type TestDB struct {
 	timeout time.Duration
 }
 
-func NewDB(timeout time.Duration, t *testing.T) TestDB {
+func NewDB(timeout time.Duration, initMigration string, t *testing.T) TestDB {
 	ctx := context.Background()
 
 	wd, err := os.Getwd()
@@ -26,7 +26,7 @@ func NewDB(timeout time.Duration, t *testing.T) TestDB {
 		t.Fatalf("failed to get working directory: %s", err.Error())
 	}
 
-	initSql := wd + "/init.sql"
+	initSql := wd + "/" + initMigration
 
 	pgContainer, err := postgres.Run(
 		ctx,
@@ -77,5 +77,14 @@ func (t TestDB) Create(dest interface{}) error {
 	if err != nil {
 		log.Printf("[TestDB] Create error: %v", err)
 	}
-	return db_gorm_postgres.MapError(err)
+	return storage_postgres_gorm.MapError(err)
+}
+
+func (t TestDB) First(dest interface{}, query interface{}, args ...interface{}) error {
+	result := t.DB.Where(query, args...).First(dest)
+	err := result.Error
+	if err != nil {
+		log.Printf("[TestDB] First error: %v", err)
+	}
+	return storage_postgres_gorm.MapError(err)
 }

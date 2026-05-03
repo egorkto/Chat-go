@@ -8,17 +8,20 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/egorkto/Chat-go/internal/auth"
-	auth_service "github.com/egorkto/Chat-go/internal/auth/service"
-	auth_transport "github.com/egorkto/Chat-go/internal/auth/transport/http"
-	"github.com/egorkto/Chat-go/internal/db"
-	db_gorm_postgres "github.com/egorkto/Chat-go/internal/db/gorm/postgres"
-	echo_router "github.com/egorkto/Chat-go/internal/echo/router"
-	echo_utils "github.com/egorkto/Chat-go/internal/echo/utils"
-	"github.com/egorkto/Chat-go/internal/http_server"
+	auth_jwt_service "github.com/egorkto/Chat-go/internal/auth/jwt/service"
+	auth_jwt_token_manager "github.com/egorkto/Chat-go/internal/auth/jwt/token_manager"
+	auth_jwt_transport_http "github.com/egorkto/Chat-go/internal/auth/jwt/transport/http"
 	"github.com/egorkto/Chat-go/internal/logger"
+	storage_postgres "github.com/egorkto/Chat-go/internal/storage/postgres"
+	storage_postgres_gorm "github.com/egorkto/Chat-go/internal/storage/postgres/gorm"
+	transport_http_echo "github.com/egorkto/Chat-go/internal/transport/http/echo"
+	transport_http_echo_utils "github.com/egorkto/Chat-go/internal/transport/http/echo/utils"
+	transport_http_server "github.com/egorkto/Chat-go/internal/transport/http/server"
+	users_service "github.com/egorkto/Chat-go/internal/users/service"
 	users_storage "github.com/egorkto/Chat-go/internal/users/storage"
-	"github.com/egorkto/Chat-go/validator"
+	users_transport "github.com/egorkto/Chat-go/internal/users/transport/http"
+	"github.com/egorkto/Chat-go/internal/validator"
+	"github.com/labstack/echo/v5"
 	echoSwagger "github.com/swaggo/echo-swagger/v2"
 
 	_ "github.com/egorkto/Chat-go/docs"
@@ -47,19 +50,19 @@ func main() {
 	defer logger.Close()
 
 	logger.Debug("Initializing postgres db")
-	dbCfg := db.NewConfigMust()
-	db, err := db_gorm_postgres.New(dbCfg)
+	dbCfg := storage_postgres.NewConfigMust()
+	db, err := storage_postgres_gorm.New(dbCfg)
 	if err != nil {
 		logger.Error("initialize db: ", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
 
 	logger.Debug("Initializing echo router")
-	e := echo_router.NewRouter(logger.Logger)
+	e := transport_http_echo.NewRouter(logger.Logger)
 
 	logger.Debug("Initializing jwt generator")
-	jwtCfg := auth.NewJWTConfigMust()
-	jwtGenerator, err := auth.NewJWTGenerator(jwtCfg)
+	jwtCfg := auth_jwt_token_manager.NewConfigMust()
+	tokenManager, err := auth_jwt_token_manager.New(jwtCfg)
 	if err != nil {
 		logger.Error("initialize jwt generator: ", slog.String("error", err.Error()))
 		os.Exit(1)
@@ -67,16 +70,27 @@ func main() {
 
 	validator := validator.New()
 
-	usersStorage := users_storage.New(db)
-	authService := auth_service.New(jwtGenerator, usersStorage, validator)
-	authTransport := auth_transport.New(authService)
+	var authorizedRoutes []echo.Route
+	var unauthorizedRoutes []echo.Route
 
-	echo_utils.AddMany(e, authTransport.Routes())
+	usersStorage := users_storage.New(db)
+	usersService := users_service.New(usersStorage)
+	usersTransport := users_transport.New(usersService)
+	authorizedRoutes = append(authorizedRoutes, usersTransport.Routes()...)
+
+	authService := auth_jwt_service.New(tokenManager, usersStorage, validator)
+	authTransport := auth_jwt_transport_http.New(authService)
+	unauthorizedRoutes = append(unauthorizedRoutes, authTransport.Routes()...)
+
+	transport_http_echo_utils.WithMiddlewares(authorizedRoutes, tokenManager.EchoMiddleware())
+
+	transport_http_echo_utils.AddMany(e, authorizedRoutes)
+	transport_http_echo_utils.AddMany(e, unauthorizedRoutes)
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	logger.Debug("Initializing HTTP server")
-	serverCfg := http_server.NewConfigMust()
-	server := http_server.New(serverCfg, e, logger.Logger)
+	serverCfg := transport_http_server.NewConfigMust()
+	server := transport_http_server.New(serverCfg, e, logger.Logger)
 
 	if err := server.Run(ctx); err != nil {
 		logger.Error("server stopped", slog.String("error", err.Error()))

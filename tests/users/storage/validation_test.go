@@ -21,31 +21,31 @@ func TestValidation(t *testing.T) {
 	}{
 		{
 			name:     "Valid data",
-			user:     domain.NewUser(0, 0, gofakeit.Name()),
+			user:     domain.NewUser(0, 0, gofakeit.Name(), gofakeit.Username()),
 			password: gofakeit.Password(true, true, true, true, true, 10),
 			wantErr:  false,
 		},
 		{
 			name:     "Empty password",
-			user:     domain.NewUser(0, 0, gofakeit.Name()),
+			user:     domain.NewUser(0, 0, gofakeit.Name(), gofakeit.Username()),
 			password: "",
 			wantErr:  true,
 		},
 		{
 			name:     "Short full name",
-			user:     domain.NewUser(0, 0, gofakeit.LetterN(2)),
+			user:     domain.NewUser(0, 0, gofakeit.LetterN(2), gofakeit.Username()),
 			password: gofakeit.Password(true, true, true, true, true, 10),
 			wantErr:  true,
 		},
 		{
 			name:     "Long full name",
-			user:     domain.NewUser(0, 0, gofakeit.LetterN(21)),
+			user:     domain.NewUser(0, 0, gofakeit.LetterN(21), gofakeit.Username()),
 			password: gofakeit.Password(true, true, true, true, true, 10),
 			wantErr:  true,
 		},
 	}
 
-	db := tests_postgres.NewDB(10*time.Second, t)
+	db := tests_postgres.NewDB(10*time.Second, "migrations/init.sql", t)
 	storage := users_storage.New(db)
 	ctx := context.Background()
 
