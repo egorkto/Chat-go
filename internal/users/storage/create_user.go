@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	db_gorm "github.com/egorkto/Chat-go/internal/db/gorm"
 	"github.com/egorkto/Chat-go/internal/domain"
+	storage_postgres_gorm "github.com/egorkto/Chat-go/internal/storage/postgres/gorm"
 )
 
 func (s *UsersStorage) CreateUser(
@@ -16,8 +16,9 @@ func (s *UsersStorage) CreateUser(
 	cancel := s.db.WithTimeoutContext(ctx)
 	defer cancel()
 
-	model := db_gorm.UserModel{
+	model := storage_postgres_gorm.UserModel{
 		FullName: user.FullName(),
+		Login:    user.Login(),
 		Password: password,
 	}
 

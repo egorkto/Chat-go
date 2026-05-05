@@ -3,7 +3,7 @@ package logger
 import (
 	"fmt"
 
-	core_config "github.com/egorkto/Chat-go/internal/config"
+	"github.com/egorkto/Chat-go/internal/utils"
 )
 
 type Config struct {
@@ -12,7 +12,7 @@ type Config struct {
 }
 
 func NewConfigMust() Config {
-	cfg, err := core_config.New[Config]("LOGGER")
+	cfg, err := utils.NewEnvConfig[Config]("LOGGER")
 
 	if err != nil {
 		err = fmt.Errorf("get logger config: %w", err)

@@ -2,3 +2,4 @@
 *.log
 certs/
 out/
+tests/certs/
