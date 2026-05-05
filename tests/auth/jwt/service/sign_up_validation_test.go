@@ -1,4 +1,4 @@
-package tests_auth_jwt
+package tests_auth_jwt_service
 
 import (
 	"context"
@@ -43,7 +43,7 @@ func TestSignUpValidation(t *testing.T) {
 		},
 		{
 			name:      "Long full name",
-			full_name: gofakeit.LetterN(40),
+			full_name: gofakeit.LetterN(110),
 			login:     gofakeit.Username(),
 			password:  gofakeit.Password(true, true, true, true, true, 10),
 			wantErr:   true,
@@ -107,14 +107,14 @@ func TestSignUpValidation(t *testing.T) {
 	}
 
 	mockStorage := tests_mocks.NewUsersStorageMock()
-	mockGenerator := tests_mocks.NewTokenManagerMock()
+	tokenManagerMock := tests_mocks.NewTokenManagerMock()
 
 	mockStorage.On("CreateUser", mS_anythingArgs...).Return(domain.User{}, nil)
-	mockGenerator.On("Generate", mG_anythingArgs...).Return(domain.JWT{}, nil)
+	tokenManagerMock.On("Generate", mG_anythingArgs...).Return(domain.JWT{}, nil)
 
 	validator := validator.New()
 
-	service := auth_jwt_service.New(mockGenerator, mockStorage, validator)
+	service := auth_jwt_service.New(tokenManagerMock, mockStorage, validator)
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -127,7 +127,7 @@ func TestSignUpValidation(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				mockStorage.AssertCalled(t, "CreateUser", mS_anythingArgs...)
-				mockGenerator.AssertCalled(t, "Generate", mG_anythingArgs...)
+				tokenManagerMock.AssertCalled(t, "Generate", mG_anythingArgs...)
 			}
 		})
 	}

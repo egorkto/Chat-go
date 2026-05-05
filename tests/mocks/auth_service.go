@@ -2,6 +2,7 @@ package tests_mocks
 
 import (
 	"context"
+	"time"
 
 	"github.com/egorkto/Chat-go/internal/domain"
 	"github.com/stretchr/testify/mock"
@@ -39,4 +40,9 @@ func (m *AuthServiceMock) Refresh(
 ) (domain.JWT, error) {
 	args := m.Called(ctx, refreshToken)
 	return args.Get(0).(domain.JWT), args.Error(1)
+}
+
+func (m *AuthServiceMock) GetTokenExpires(token string) (time.Time, error) {
+	args := m.Called(token)
+	return args.Get(0).(time.Time), args.Error(1)
 }

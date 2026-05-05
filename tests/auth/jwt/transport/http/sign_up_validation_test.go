@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/brianvoe/gofakeit/v7"
 	auth_jwt_transport_http "github.com/egorkto/Chat-go/internal/auth/jwt/transport/http"
@@ -25,8 +26,9 @@ func TestValidation(t *testing.T) {
 		{
 			name: "Valid input",
 			json: fmt.Sprintf(
-				`{"full_name": "%s", "password": "%s"}`,
+				`{"full_name": "%s", "login": "%s", "password": "%s"}`,
 				gofakeit.Name(),
+				gofakeit.Username(),
 				gofakeit.Password(true, true, true, true, true, 10),
 			),
 			expectedStatus: http.StatusCreated,
@@ -34,8 +36,9 @@ func TestValidation(t *testing.T) {
 		{
 			name: "Short full name",
 			json: fmt.Sprintf(
-				`{"full_name": "%s", "password": "%s"}`,
+				`{"full_name": "%s", "login": "%s", "password": "%s"}`,
 				gofakeit.LetterN(1),
+				gofakeit.Username(),
 				gofakeit.Password(true, true, true, true, true, 10),
 			),
 			expectedStatus: http.StatusBadRequest,
@@ -43,8 +46,9 @@ func TestValidation(t *testing.T) {
 		{
 			name: "Long full name",
 			json: fmt.Sprintf(
-				`{"full_name": "%s", "password": "%s"}`,
-				gofakeit.LetterN(40),
+				`{"full_name": "%s", "login": "%s", "password": "%s"}`,
+				gofakeit.LetterN(120),
+				gofakeit.Username(),
 				gofakeit.Password(true, true, true, true, true, 10),
 			),
 			expectedStatus: http.StatusBadRequest,
@@ -52,8 +56,9 @@ func TestValidation(t *testing.T) {
 		{
 			name: "Empty full name",
 			json: fmt.Sprintf(
-				`{"full_name": "%s", "password": "%s"}`,
+				`{"full_name": "%s", "login": "%s", "password": "%s"}`,
 				"",
+				gofakeit.Username(),
 				gofakeit.Password(true, true, true, true, true, 10),
 			),
 			expectedStatus: http.StatusBadRequest,
@@ -61,7 +66,8 @@ func TestValidation(t *testing.T) {
 		{
 			name: "Null full name",
 			json: fmt.Sprintf(
-				`{"full_name": null, "password": "%s"}`,
+				`{"full_name": null, "login": "%s", "password": "%s"}`,
+				gofakeit.Username(),
 				gofakeit.Password(true, true, true, true, true, 10),
 			),
 			expectedStatus: http.StatusBadRequest,
@@ -69,7 +75,8 @@ func TestValidation(t *testing.T) {
 		{
 			name: "No full name",
 			json: fmt.Sprintf(
-				`{"password": "%s"}`,
+				`{"login": "%s", "password": "%s"}`,
+				gofakeit.Username(),
 				gofakeit.Password(true, true, true, true, true, 10),
 			),
 			expectedStatus: http.StatusBadRequest,
@@ -77,8 +84,9 @@ func TestValidation(t *testing.T) {
 		{
 			name: "Long password",
 			json: fmt.Sprintf(
-				`{"full_name": "%s", "password": "%s"}`,
+				`{"full_name": "%s", "login": "%s", "password": "%s"}`,
 				gofakeit.Name(),
+				gofakeit.Username(),
 				gofakeit.Password(true, true, true, true, true, 130),
 			),
 			expectedStatus: http.StatusBadRequest,
@@ -86,8 +94,9 @@ func TestValidation(t *testing.T) {
 		{
 			name: "Short password",
 			json: fmt.Sprintf(
-				`{"full_name": "%s", "password": "%s"}`,
+				`{"full_name": "%s", "login": "%s", "password": "%s"}`,
 				gofakeit.Name(),
+				gofakeit.Username(),
 				gofakeit.LetterN(4),
 			),
 			expectedStatus: http.StatusBadRequest,
@@ -95,8 +104,9 @@ func TestValidation(t *testing.T) {
 		{
 			name: "Empty password",
 			json: fmt.Sprintf(
-				`{"full_name": "%s", "password": "%s"}`,
+				`{"full_name": "%s", "login": "%s", "password": "%s"}`,
 				gofakeit.Name(),
+				gofakeit.Username(),
 				"",
 			),
 			expectedStatus: http.StatusBadRequest,
@@ -104,23 +114,73 @@ func TestValidation(t *testing.T) {
 		{
 			name: "Null password",
 			json: fmt.Sprintf(
-				`{"full_name": "%s", "password": null}`,
+				`{"full_name": "%s", "login": "%s", "password": null}`,
 				gofakeit.Name(),
+				gofakeit.Username(),
 			),
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
 			name: "No password",
 			json: fmt.Sprintf(
-				`{"full_name": "%s"}`,
+				`{"full_name": "%s", "login": "%s", }`,
 				gofakeit.Name(),
+				gofakeit.Username(),
+			),
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name: "Long login",
+			json: fmt.Sprintf(
+				`{"full_name": "%s", "login": "%s", "password": "%s"}`,
+				gofakeit.Name(),
+				gofakeit.LetterN(40),
+				gofakeit.Password(true, true, true, true, true, 10),
+			),
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name: "Short login",
+			json: fmt.Sprintf(
+				`{"full_name": "%s", "login": "%s", "password": "%s"}`,
+				gofakeit.Name(),
+				gofakeit.LetterN(2),
+				gofakeit.Password(true, true, true, true, true, 10),
+			),
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name: "Empty login",
+			json: fmt.Sprintf(
+				`{"full_name": "%s", "login": "", "password": "%s"}`,
+				gofakeit.Name(),
+				gofakeit.Password(true, true, true, true, true, 10),
+			),
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name: "Null login",
+			json: fmt.Sprintf(
+				`{"full_name": "%s", "login": null, "password": "%s"}`,
+				gofakeit.Name(),
+				gofakeit.Password(true, true, true, true, true, 10),
+			),
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name: "No login",
+			json: fmt.Sprintf(
+				`{"full_name": "%s", "password": "%s"}`,
+				gofakeit.Name(),
+				gofakeit.Password(true, true, true, true, true, 10),
 			),
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
 			name: "Empty creds",
 			json: fmt.Sprintf(
-				`{"full_name": "%s", "password": "%s"}`,
+				`{"full_name": "%s", "login": "%s", "password": "%s"}`,
+				"",
 				"",
 				"",
 			),
@@ -128,7 +188,7 @@ func TestValidation(t *testing.T) {
 		},
 		{
 			name:           "Null creds",
-			json:           `{"full_name": null, "password": null}`,
+			json:           `{"full_name": null, "login": null, "password": null}`,
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
@@ -144,6 +204,9 @@ func TestValidation(t *testing.T) {
 		mock.Anything,
 		mock.Anything,
 		mock.Anything).Return(domain.User{}, domain.JWT{}, nil)
+	serviceMock.On(
+		"GetTokenExpires",
+		mock.Anything).Return(time.Now(), nil)
 
 	transport := auth_jwt_transport_http.New(serviceMock)
 

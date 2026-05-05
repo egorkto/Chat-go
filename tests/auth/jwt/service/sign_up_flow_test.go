@@ -1,4 +1,4 @@
-package tests_auth_jwt
+package tests_auth_jwt_service
 
 import (
 	"context"
@@ -110,12 +110,12 @@ func TestSignUpFlow(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			storageMock := tests_mocks.NewUsersStorageMock()
-			jwtGeneratorMock := tests_mocks.NewTokenManagerMock()
+			tokenManagerMock := tests_mocks.NewTokenManagerMock()
 			validatorMock := tests_mocks.NewValidatorMock()
 
-			service := auth_jwt_service.New(jwtGeneratorMock, storageMock, validatorMock)
+			service := auth_jwt_service.New(tokenManagerMock, storageMock, validatorMock)
 
-			tc.setup(storageMock, validatorMock, jwtGeneratorMock)
+			tc.setup(storageMock, validatorMock, tokenManagerMock)
 			user := tc.user
 
 			_, _, err := service.SignUp(context.Background(), user, "validPassword123")

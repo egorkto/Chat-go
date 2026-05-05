@@ -53,9 +53,8 @@ func (tm TokenManager) Generate(u domain.User) (domain.JWT, error) {
 	}
 
 	jwt := domain.JWT{
-		Access:         accessString,
-		Refresh:        refreshString,
-		RefreshExpires: tm.cfg.RefreshExpired,
+		Access:  accessString,
+		Refresh: refreshString,
 	}
 
 	return jwt, nil
