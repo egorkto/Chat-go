@@ -39,7 +39,7 @@ func TestValidation(t *testing.T) {
 		},
 		{
 			name:     "Long full name",
-			user:     domain.NewUser(0, 0, gofakeit.LetterN(21), gofakeit.Username()),
+			user:     domain.NewUser(0, 0, gofakeit.LetterN(120), gofakeit.Username()),
 			password: gofakeit.Password(true, true, true, true, true, 10),
 			wantErr:  true,
 		},

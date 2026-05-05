@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/egorkto/Chat-go/internal/domain"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v5"
 )
 
@@ -13,7 +12,7 @@ type HTTPHandler struct {
 }
 
 type UsersService interface {
-	GetUser(ctx context.Context, id int, token *jwt.Token) (domain.User, error)
+	GetUser(ctx context.Context, id int) (domain.User, error)
 }
 
 func New(s UsersService) *HTTPHandler {

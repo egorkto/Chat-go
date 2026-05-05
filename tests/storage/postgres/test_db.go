@@ -4,10 +4,13 @@ import (
 	"context"
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
 	storage_postgres_gorm "github.com/egorkto/Chat-go/internal/storage/postgres/gorm"
+	tests_utils "github.com/egorkto/Chat-go/tests/utils"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	gorm_postgres "gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -21,17 +24,20 @@ type TestDB struct {
 func NewDB(timeout time.Duration, initMigration string, t *testing.T) TestDB {
 	ctx := context.Background()
 
-	wd, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("failed to get working directory: %s", err.Error())
-	}
+	var migrations []string
 
-	initSql := wd + "/" + initMigration
+	migrationsDir := filepath.Join(tests_utils.GetProjectRoot(), "migrations")
+	entries, err := os.ReadDir(migrationsDir)
+	for _, entry := range entries {
+		if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".up.sql") {
+			migrations = append(migrations, filepath.Join(migrationsDir, entry.Name()))
+		}
+	}
 
 	pgContainer, err := postgres.Run(
 		ctx,
 		"postgres:17.9-alpine",
-		postgres.WithInitScripts(initSql),
+		postgres.WithInitScripts(migrations...),
 		postgres.WithDatabase("testdb"),
 		postgres.WithUsername("user"),
 		postgres.WithPassword("pass"),

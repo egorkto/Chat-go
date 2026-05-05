@@ -3,6 +3,7 @@ package auth_jwt_transport_http
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/egorkto/Chat-go/internal/domain"
 	"github.com/labstack/echo/v5"
@@ -29,6 +30,8 @@ type AuthService interface {
 		ctx context.Context,
 		refreshToken string,
 	) (domain.JWT, error)
+
+	GetTokenExpires(token string) (time.Time, error)
 }
 
 func New(s AuthService) *HTTPHandler {

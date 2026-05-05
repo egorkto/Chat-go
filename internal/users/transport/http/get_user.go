@@ -5,22 +5,10 @@ import (
 	"strconv"
 
 	transport_http "github.com/egorkto/Chat-go/internal/transport/http"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v5"
 )
 
 func (h *HTTPHandler) GetUser(e *echo.Context) error {
-	token, ok := e.Get("token").(*jwt.Token)
-	if !ok {
-		return e.JSON(
-			http.StatusUnauthorized,
-			transport_http.ErrorResponse{
-				Message: "Unauthorized",
-				Err:     "Token in echo context is missing",
-			},
-		)
-	}
-
 	idParam := e.Param("id")
 	if idParam == "" {
 		return e.JSON(
@@ -43,7 +31,7 @@ func (h *HTTPHandler) GetUser(e *echo.Context) error {
 		)
 	}
 
-	user, err := h.service.GetUser(e.Request().Context(), id, token)
+	user, err := h.service.GetUser(e.Request().Context(), id)
 	if err != nil {
 		return e.JSON(
 			http.StatusUnauthorized,
