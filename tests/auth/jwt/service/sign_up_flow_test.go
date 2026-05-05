@@ -19,7 +19,7 @@ type setupFunc func(
 	mG *tests_mocks.TokenManagerMock,
 )
 
-func TestSignUpFlow(t *testing.T) {
+func TestSignUp_Flow(t *testing.T) {
 	var (
 		mS_anythingArgs = []interface{}{mock.Anything, mock.Anything, mock.Anything}
 		mV_anythingArgs = []interface{}{mock.Anything, mock.Anything}

@@ -20,6 +20,16 @@ func (h *HTTPHandler) LogIn(e *echo.Context) error {
 			})
 	}
 
+	if err := e.Validate(request); err != nil {
+		e.Logger().Error("validate request", slog.String("err", err.Error()))
+		return e.JSON(
+			http.StatusBadRequest,
+			transport_http.ErrorResponse{
+				Message: "failed to validate request",
+				Err:     err.Error(),
+			})
+	}
+
 	user, domainJWT, err := h.service.LogIn(
 		e.Request().Context(),
 		request.Login,

@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSignUpValidation(t *testing.T) {
+func TestSignUp_Validation(t *testing.T) {
 	var (
 		mS_anythingArgs = []interface{}{mock.Anything, mock.Anything, mock.Anything}
 		mG_anythingArgs = []interface{}{mock.Anything}
