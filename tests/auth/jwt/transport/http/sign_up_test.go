@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func TestValidation(t *testing.T) {
+func TestSignUp_Validation(t *testing.T) {
 	testCases := []struct {
 		name           string
 		json           string

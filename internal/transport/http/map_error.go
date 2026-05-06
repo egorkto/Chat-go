@@ -15,6 +15,8 @@ func ErrorToHTTPCode(err error) int {
 		return http.StatusNotFound
 	case errors.Is(err, domain.ErrConflict):
 		return http.StatusConflict
+	case errors.Is(err, domain.ErrUnauthorized):
+		return http.StatusUnauthorized
 	default:
 		return http.StatusInternalServerError
 	}

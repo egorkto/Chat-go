@@ -10,7 +10,7 @@ type SignUpRequest struct {
 
 type LogInRequest struct {
 	Login    string `json:"login" validate:"required,max=25" example:"ivan"`
-	Password string `json:"password" validate:"required,max=200" example:"KGorgsoroee3235oOSNG?>,frgs3"`
+	Password string `json:"password" validate:"required,max=150" example:"KGorgsoroee3235oOSNG?>,frgs3"`
 }
 
 type AuthResponse struct {
