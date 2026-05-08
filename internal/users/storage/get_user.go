@@ -2,9 +2,11 @@ package users_storage
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/egorkto/Chat-go/internal/domain"
+	storage_postgres "github.com/egorkto/Chat-go/internal/storage/postgres"
 	storage_postgres_gorm "github.com/egorkto/Chat-go/internal/storage/postgres/gorm"
 )
 
@@ -19,8 +21,15 @@ func (s *UsersStorage) GetUserByLogin(
 
 	err := s.db.First(&userModel, "login = ?", login)
 	if err != nil {
+		if errors.Is(err, storage_postgres.ErrRecordNotFound) {
+			return domain.User{}, "", fmt.Errorf(
+				"user record not found, %s: %w",
+				err.Error(),
+				domain.ErrNotFound,
+			)
+		}
 		return domain.User{}, "", fmt.Errorf(
-			"recieving user by login and password: %w",
+			"recieving user by login: %w",
 			err,
 		)
 	}
@@ -41,10 +50,18 @@ func (s *UsersStorage) GetUserByID(
 
 	err := s.db.First(&userModel, "id = ?", id)
 	if err != nil {
-		return domain.User{}, fmt.Errorf(
-			"recieving user by id: %w",
-			err,
-		)
+		if errors.Is(err, storage_postgres.ErrRecordNotFound) {
+			return domain.User{}, fmt.Errorf(
+				"user record not found, %s: %w",
+				err.Error(),
+				domain.ErrNotFound,
+			)
+		} else {
+			return domain.User{}, fmt.Errorf(
+				"recieving user by id: %w",
+				err,
+			)
+		}
 	}
 
 	user := userModel.ToDomain()

@@ -8,6 +8,16 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
+// Refresh godoc
+// @Summary      Обновление токена
+// @Description  Возвращает новые access и refresh токены
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Success      200       {object}  string                       "Обновленный access токен"
+// @Failure      401       {object}  transport_http.ErrorResponse "Неавторизованный запрос"
+// @Failure 	 500       {object}  transport_http.ErrorResponse "Ошибка сервера"
+// @Router       /refresh [post]
 func (h *HTTPHandler) Refresh(e *echo.Context) error {
 	refreshToken, err := e.Cookie("refresh_token")
 	if err != nil {

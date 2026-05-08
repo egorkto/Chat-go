@@ -108,7 +108,7 @@ func TestLogIn_InvalidUser(t *testing.T) {
 		"LogIn",
 		mock.Anything,
 		mock.Anything,
-		mock.Anything).Return(domain.User{}, domain.JWT{}, domain.ErrUnauthorized)
+		mock.Anything).Return(domain.User{}, domain.JWT{}, domain.ErrNotFound)
 	serviceMock.On(
 		"GetTokenExpires",
 		mock.Anything).Return(time.Now(), nil)
@@ -148,7 +148,7 @@ func TestLogIn_InvalidUser(t *testing.T) {
 		code = rec.Code
 	}
 
-	if code != http.StatusUnauthorized {
-		t.Errorf("expected status: %d, got %d", http.StatusUnauthorized, code)
+	if code != http.StatusNotFound {
+		t.Errorf("expected status: %d, got %d", http.StatusNotFound, code)
 	}
 }

@@ -24,7 +24,9 @@ func New(cfg storage_postgres.Config) (*DB, error) {
 		cfg.Port,
 	)
 
-	db, err := gorm.Open(postgres.Open(dsn))
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		TranslateError: true,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("opening db: %w", err)
 	}
@@ -45,16 +47,15 @@ func (db *DB) WithTimeoutContext(ctx context.Context) context.CancelFunc {
 
 func (db *DB) Create(dest interface{}) error {
 	result := db.DB.Create(dest)
-	err := result.Error
-	return MapError(err)
+	return MapError(result.Error)
 }
 
 func (db *DB) Where(query interface{}, args ...interface{}) error {
 	result := db.DB.Where(query, args...)
-	return result.Error
+	return MapError(result.Error)
 }
 
 func (db *DB) First(dest interface{}, query interface{}, args ...interface{}) error {
 	result := db.DB.Where(query, args...).First(dest)
-	return result.Error
+	return MapError(result.Error)
 }
