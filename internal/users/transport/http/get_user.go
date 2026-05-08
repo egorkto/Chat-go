@@ -8,6 +8,19 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
+// GetUser godoc
+// @Summary      Получение пользователя
+// @Description  Возвращает данные существующего пользователя
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id        path      int true                     "Идентификатор пользователя"
+// @Success      200       {object}  UserDTOResponse              "Данные пользователя"
+// @Failure      401       {object}  transport_http.ErrorResponse "Неавторизованный запрос"
+// @Failure      404       {object}  transport_http.ErrorResponse "Пользователь не найден"
+// @Failure 	 500       {object}  transport_http.ErrorResponse "Ошибка сервера"
+// @Router       /users/{id} [get]
 func (h *HTTPHandler) GetUser(e *echo.Context) error {
 	idParam := e.Param("id")
 	if idParam == "" {

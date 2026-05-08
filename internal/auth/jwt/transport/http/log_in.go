@@ -8,6 +8,18 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
+// LogInUser godoc
+// @Summary      Авторизация пользователя
+// @Description  Авторизирует существующего пользователя
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Param        request   body      LogInRequest  true           "Данные авторизации"
+// @Success      200       {object}  AuthResponse                "Успешная авторизация"
+// @Failure      400       {object}  transport_http.ErrorResponse "Неверный запрос"
+// @Failure		 404       {object}  transport_http.ErrorResponse "Пользователь не найден"
+// @Failure 	 500       {object}  transport_http.ErrorResponse "Ошибка сервера"
+// @Router       /log-in [post]
 func (h *HTTPHandler) LogIn(e *echo.Context) error {
 	var request LogInRequest
 	if err := e.Bind(&request); err != nil {

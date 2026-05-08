@@ -18,6 +18,93 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/log-in": {
+            "post": {
+                "description": "Авторизирует существующего пользователя",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Авторизация пользователя",
+                "parameters": [
+                    {
+                        "description": "Данные авторизации",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_auth_jwt_transport_http.LogInRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешная авторизация",
+                        "schema": {
+                            "$ref": "#/definitions/internal_auth_jwt_transport_http.AuthResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный запрос",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_egorkto_Chat-go_internal_transport_http.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Пользователь не найден",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_egorkto_Chat-go_internal_transport_http.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_egorkto_Chat-go_internal_transport_http.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/refresh": {
+            "post": {
+                "description": "Возвращает новые access и refresh токены",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Обновление токена",
+                "responses": {
+                    "200": {
+                        "description": "Обновленный access токен",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Неавторизованный запрос",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_egorkto_Chat-go_internal_transport_http.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_egorkto_Chat-go_internal_transport_http.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/sign-up": {
             "post": {
                 "description": "Создает новую учетную запись пользователя",
@@ -38,7 +125,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_auth_transport_http.SignUpRequest"
+                            "$ref": "#/definitions/internal_auth_jwt_transport_http.SignUpRequest"
                         }
                     }
                 ],
@@ -46,19 +133,80 @@ const docTemplate = `{
                     "201": {
                         "description": "Успешная регистрация",
                         "schema": {
-                            "$ref": "#/definitions/internal_auth_transport_http.SignUpResponse"
+                            "$ref": "#/definitions/internal_auth_jwt_transport_http.AuthResponse"
                         }
                     },
                     "400": {
                         "description": "Неверный запрос",
                         "schema": {
-                            "$ref": "#/definitions/github_com_egorkto_Chat-go_internal_echo.ErrorResponse"
+                            "$ref": "#/definitions/github_com_egorkto_Chat-go_internal_transport_http.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Пользователь уже существует",
                         "schema": {
-                            "$ref": "#/definitions/github_com_egorkto_Chat-go_internal_echo.ErrorResponse"
+                            "$ref": "#/definitions/github_com_egorkto_Chat-go_internal_transport_http.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_egorkto_Chat-go_internal_transport_http.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Возвращает данные существующего пользователя",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Получение пользователя",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Идентификатор пользователя",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Данные пользователя",
+                        "schema": {
+                            "$ref": "#/definitions/internal_users_transport_http.UserDTOResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Неавторизованный запрос",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_egorkto_Chat-go_internal_transport_http.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Пользователь не найден",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_egorkto_Chat-go_internal_transport_http.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_egorkto_Chat-go_internal_transport_http.ErrorResponse"
                         }
                     }
                 }
@@ -66,7 +214,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "github_com_egorkto_Chat-go_internal_echo.ErrorResponse": {
+        "github_com_egorkto_Chat-go_internal_transport_http.ErrorResponse": {
             "type": "object",
             "properties": {
                 "error": {
@@ -79,44 +227,66 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_auth_transport_http.SignUpRequest": {
-            "type": "object",
-            "required": [
-                "full_name",
-                "password"
-            ],
-            "properties": {
-                "full_name": {
-                    "type": "string",
-                    "maxLength": 20,
-                    "minLength": 3,
-                    "example": "Иван Иванов"
-                },
-                "password": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 5,
-                    "example": "Qwer1234?,4"
-                }
-            }
-        },
-        "internal_auth_transport_http.SignUpResponse": {
+        "internal_auth_jwt_transport_http.AuthResponse": {
             "type": "object",
             "properties": {
                 "access_token": {
                     "type": "string",
                     "example": "access_token_example"
                 },
-                "refresh_token": {
-                    "type": "string",
-                    "example": "refresh_token_example"
-                },
                 "user": {
-                    "$ref": "#/definitions/internal_auth_transport_http.UserDTO"
+                    "$ref": "#/definitions/internal_auth_jwt_transport_http.UserDTO"
                 }
             }
         },
-        "internal_auth_transport_http.UserDTO": {
+        "internal_auth_jwt_transport_http.LogInRequest": {
+            "type": "object",
+            "required": [
+                "login",
+                "password"
+            ],
+            "properties": {
+                "login": {
+                    "type": "string",
+                    "maxLength": 25,
+                    "example": "ivan"
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 150,
+                    "example": "KGorgsoroee3235oOSNG?\u003e,frgs3"
+                }
+            }
+        },
+        "internal_auth_jwt_transport_http.SignUpRequest": {
+            "type": "object",
+            "required": [
+                "full_name",
+                "login",
+                "password"
+            ],
+            "properties": {
+                "full_name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "example": "Иван Иванов"
+                },
+                "login": {
+                    "type": "string",
+                    "maxLength": 25,
+                    "minLength": 3,
+                    "example": "ivan"
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 5,
+                    "example": "KGorgsoroee3235oOSNG?\u003e,frgs3"
+                }
+            }
+        },
+        "internal_auth_jwt_transport_http.UserDTO": {
             "type": "object",
             "properties": {
                 "full_name": {
@@ -132,6 +302,31 @@ const docTemplate = `{
                     "example": 1
                 }
             }
+        },
+        "internal_users_transport_http.UserDTOResponse": {
+            "type": "object",
+            "properties": {
+                "full_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "login": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Вставьте токен в формате: Bearer \u003cваш_токен\u003e",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`

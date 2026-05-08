@@ -34,6 +34,10 @@ import (
 // @contact.url    http://github.com/egorkto
 // @host      localhost:5845
 // @BasePath  /
+// @securityDefinitions.apikey BearerAuth
+// @in                         header
+// @name                       Authorization
+// @description                Вставьте токен в формате: Bearer <ваш_токен>
 func main() {
 	ctx, cancel := signal.NotifyContext(
 		context.Background(),

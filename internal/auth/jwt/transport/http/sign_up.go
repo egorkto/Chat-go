@@ -16,9 +16,10 @@ import (
 // @Accept       json
 // @Produce      json
 // @Param        request   body      SignUpRequest  true  "Данные регистрации"
-// @Success      201  {object}  SignUpResponse "Успешная регистрация"
-// @Failure      400  {object}  echo_dto.ErrorResponse "Неверный запрос"
-// @Failure      409  {object}  echo_dto.ErrorResponse "Пользователь уже существует"
+// @Success      201  {object}  AuthResponse "Успешная регистрация"
+// @Failure      400  {object}  transport_http.ErrorResponse "Неверный запрос"
+// @Failure      409  {object}  transport_http.ErrorResponse "Пользователь уже существует"
+// @Failure 	 500  {object}  transport_http.ErrorResponse "Ошибка сервера"
 // @Router       /sign-up [post]
 func (h *HTTPHandler) SignUp(e *echo.Context) error {
 	var request SignUpRequest

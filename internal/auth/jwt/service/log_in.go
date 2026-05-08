@@ -19,7 +19,11 @@ func (s *AuthService) LogIn(
 	}
 
 	if err := compare(password, hashedPassword); err != nil {
-		return domain.User{}, domain.JWT{}, fmt.Errorf("comparing password: %w", err)
+		return domain.User{}, domain.JWT{}, fmt.Errorf(
+			"comparing password, %s: %w",
+			err.Error(),
+			domain.ErrInvalidArgument,
+		)
 	}
 
 	jwt, err := s.tokenManager.Generate(user)
