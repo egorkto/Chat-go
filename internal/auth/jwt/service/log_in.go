@@ -15,12 +15,12 @@ func (s *AuthService) LogIn(
 ) (domain.User, domain.JWT, error) {
 	user, hashedPassword, err := s.storage.GetUserByLogin(ctx, login)
 	if err != nil {
-		return domain.User{}, domain.JWT{}, fmt.Errorf("getting user: %w", err)
+		return domain.User{}, domain.JWT{}, fmt.Errorf("get user by login: %w", err)
 	}
 
 	if err := compare(password, hashedPassword); err != nil {
 		return domain.User{}, domain.JWT{}, fmt.Errorf(
-			"comparing password, %s: %w",
+			"compare password, %s: %w",
 			err.Error(),
 			domain.ErrInvalidArgument,
 		)
@@ -28,7 +28,7 @@ func (s *AuthService) LogIn(
 
 	jwt, err := s.tokenManager.Generate(user)
 	if err != nil {
-		return domain.User{}, domain.JWT{}, fmt.Errorf("generating jwt token: %w", err)
+		return domain.User{}, domain.JWT{}, fmt.Errorf("generate jwt token: %w", err)
 	}
 
 	return user, jwt, nil

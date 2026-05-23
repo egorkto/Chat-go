@@ -7,7 +7,7 @@ import (
 
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/egorkto/Chat-go/internal/domain"
-	users_storage "github.com/egorkto/Chat-go/internal/users/storage"
+	users_storage_postgres "github.com/egorkto/Chat-go/internal/users/storage/postgres"
 	tests_postgres "github.com/egorkto/Chat-go/tests/storage/postgres"
 	"github.com/stretchr/testify/assert"
 )
@@ -45,8 +45,11 @@ func TestValidation(t *testing.T) {
 		},
 	}
 
-	db := tests_postgres.NewDB(10*time.Second, "migrations/init.sql", t)
-	storage := users_storage.New(db)
+	db, err := tests_postgres.NewDB(10*time.Second, "migrations/init.sql", t)
+	if err != nil {
+		t.Fatalf("new test db: %w", err)
+	}
+	storage := users_storage_postgres.New(db)
 	ctx := context.Background()
 
 	for _, tc := range testCases {

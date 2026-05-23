@@ -11,11 +11,6 @@ type User struct {
 	login    string
 }
 
-const (
-	UninitializedID      = -1
-	UninitializedVersion = -1
-)
-
 func NewUser(
 	id int,
 	version int,

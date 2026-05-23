@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Авторизация</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f9;
+            margin: 0; 
+        }
+        .login-container { 
+            background: white;
+            padding: 30px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); 
+            width: 100%; 
+            max-width: 350px;
+        }
+        h2 { 
+            margin-bottom: 20px; 
+            text-align: center; 
+            color: #333; 
+        }
+        .form-group {
+            margin-bottom: 15px; 
+        }
+        label { 
+            display: block; 
+            margin-bottom: 5px; 
+            color: #666; 
+        }
+        input { 
+            width: 100%; 
+            padding: 10px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+            box-sizing: border-box; 
+        }
+        button { 
+            width: 100%; 
+            padding: 10px; 
+            background-color: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            font-size: 16px; 
+            cursor: pointer; 
+        }
+        button:hover { 
+            background-color: #0056b3; 
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <h2>Авторизация</h2>
+    <form id="logInForm">
+        <div class="form-group">
+            <label for="username">Логин</label>
+            <input type="text" id="login" name="login" required placeholder="Введите логин">
+        </div>
+        <div class="form-group">
+            <label for="password">Пароль</label>
+            <input type="password" id="password" name="password" required placeholder="Введите пароль">
+        </div>
+        <button type="submit">Войти</button>
+    </form>
+</div>
+
+<script>
+document.getElementById('logInForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const data = {
+        login: document.getElementById('login').value,
+        password: document.getElementById('password').value
+    };
+
+    try {
+        const response = await fetch('/log-in', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            if (result.access_token) {
+                localStorage.setItem('access_token', result.access_token);
+                alert('Авторизация успешна! Токен сохранен.');
+            } else {
+                alert('Ошибка: сервер не прислал токен в ответе.');
+            }
+        } else {
+            alert('Ошибка авторизации: ' + (result.message || response.statusText));
+        }
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Не удалось отправить запрос');
+    }
+});
+</script>
+</body>
+</html>

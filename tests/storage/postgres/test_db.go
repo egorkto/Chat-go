@@ -2,7 +2,7 @@ package tests_postgres
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,12 +16,11 @@ import (
 	"gorm.io/gorm"
 )
 
-type TestDB struct {
-	*gorm.DB
-	timeout time.Duration
-}
-
-func NewDB(timeout time.Duration, initMigration string, t *testing.T) TestDB {
+func NewDB(
+	timeout time.Duration,
+	initMigration string,
+	t *testing.T,
+) (*storage_postgres_gorm.GormDB, error) {
 	ctx := context.Background()
 
 	var migrations []string
@@ -58,39 +57,20 @@ func NewDB(timeout time.Duration, initMigration string, t *testing.T) TestDB {
 		t.Fatalf("failed to get connection string: %s", err.Error())
 	}
 
-	db, err := gorm.Open(gorm_postgres.Open(connStr))
+	db, err := gorm.Open(gorm_postgres.Open(connStr), &gorm.Config{
+		TranslateError: true,
+	})
 	if err != nil {
 		t.Fatalf("failed to open gorm db: %s", err.Error())
 	}
 
-	return TestDB{
-		DB:      db,
-		timeout: timeout,
+	gormDB := storage_postgres_gorm.GormDB{
+		DB: db,
 	}
-}
 
-func (t TestDB) WithTimeoutContext(ctx context.Context) context.CancelFunc {
-	timeoutCtx, cancel := context.WithTimeout(ctx, t.timeout)
-
-	t.DB = t.DB.WithContext(timeoutCtx)
-
-	return cancel
-}
-
-func (t TestDB) Create(dest interface{}) error {
-	result := t.DB.Create(dest)
-	err := result.Error
-	if err != nil {
-		log.Printf("[TestDB] Create error: %v", err)
+	if err := gormDB.SetTimeout(timeout); err != nil {
+		return nil, fmt.Errorf("set timeout: %w", err)
 	}
-	return storage_postgres_gorm.MapError(err)
-}
 
-func (t TestDB) First(dest interface{}, query interface{}, args ...interface{}) error {
-	result := t.DB.Where(query, args...).First(dest)
-	err := result.Error
-	if err != nil {
-		log.Printf("[TestDB] First error: %v", err)
-	}
-	return storage_postgres_gorm.MapError(err)
+	return &gormDB, nil
 }

@@ -72,7 +72,7 @@ func TestMiddleware(t *testing.T) {
 		},
 	}
 
-	mw := tm.EchoMiddleware()
+	mw := tm.HeaderMiddleware()
 	testHandler := func(c *echo.Context) error {
 		return nil
 	}

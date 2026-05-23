@@ -1,10 +1,11 @@
 package auth_jwt_transport_http
 
 import (
-	"log/slog"
+	"fmt"
 	"net/http"
 
 	transport_http "github.com/egorkto/Chat-go/internal/transport/http"
+	transport_http_echo "github.com/egorkto/Chat-go/internal/transport/http/echo"
 	"github.com/labstack/echo/v5"
 )
 
@@ -20,42 +21,35 @@ import (
 // @Failure		 404       {object}  transport_http.ErrorResponse "Пользователь не найден"
 // @Failure 	 500       {object}  transport_http.ErrorResponse "Ошибка сервера"
 // @Router       /log-in [post]
-func (h *HTTPHandler) LogIn(e *echo.Context) error {
+func (h *HTTPHandler) LogIn(c *echo.Context) error {
 	var request LogInRequest
-	if err := e.Bind(&request); err != nil {
-		e.Logger().Error("bind request", slog.String("err", err.Error()))
-		return e.JSON(
-			http.StatusBadRequest,
-			transport_http.ErrorResponse{
-				Message: "failed to read request body",
-				Err:     err.Error(),
-			})
+	if err := c.Bind(&request); err != nil {
+		return transport_http_echo.JSON_Error(
+			c,
+			"failed to log in",
+			fmt.Errorf("bind request: %w", err),
+		)
 	}
 
-	if err := e.Validate(request); err != nil {
-		e.Logger().Error("validate request", slog.String("err", err.Error()))
-		return e.JSON(
-			http.StatusBadRequest,
-			transport_http.ErrorResponse{
-				Message: "failed to validate request",
-				Err:     err.Error(),
-			})
+	if err := c.Validate(request); err != nil {
+		return transport_http_echo.JSON_Error(
+			c,
+			"wrong login or password",
+			fmt.Errorf("validate request: %w", err),
+		)
 	}
 
 	user, domainJWT, err := h.service.LogIn(
-		e.Request().Context(),
+		c.Request().Context(),
 		request.Login,
 		request.Password,
 	)
 	if err != nil {
-		e.Logger().Error("log in user", slog.String("err", err.Error()))
-		code := transport_http.ErrorToHTTPCode(err)
-		return e.JSON(
-			code,
-			transport_http.ErrorResponse{
-				Message: "failed to log in",
-				Err:     err.Error(),
-			})
+		return transport_http_echo.JSON_Error(
+			c,
+			"wrong login or password",
+			fmt.Errorf("log in user: %w", err),
+		)
 	}
 
 	access := domainJWT.Access
@@ -63,14 +57,11 @@ func (h *HTTPHandler) LogIn(e *echo.Context) error {
 
 	refreshExpires, err := h.service.GetTokenExpires(refresh)
 	if err != nil {
-		e.Logger().Error("get refresh token expires", slog.String("err", err.Error()))
-		code := transport_http.ErrorToHTTPCode(err)
-		return e.JSON(
-			code,
-			transport_http.ErrorResponse{
-				Message: "failed to get refresh token expires",
-				Err:     err.Error(),
-			})
+		return transport_http_echo.JSON_Error(
+			c,
+			"failed to log in",
+			fmt.Errorf("get refreshg token expires: %w", err),
+		)
 	}
 
 	cookie := transport_http.NewCookie(
@@ -81,9 +72,9 @@ func (h *HTTPHandler) LogIn(e *echo.Context) error {
 		true,
 	)
 
-	e.SetCookie(cookie)
+	c.SetCookie(cookie)
 
 	response := responseFromDomain(user, access)
 
-	return e.JSON(http.StatusOK, response)
+	return c.JSON(http.StatusOK, response)
 }

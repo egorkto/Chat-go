@@ -5,6 +5,7 @@ go 1.25.0
 require (
 	github.com/brianvoe/gofakeit/v7 v7.14.1
 	github.com/golang-jwt/jwt/v5 v5.3.1
+	github.com/gorilla/websocket v1.5.3
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/labstack/echo/v5 v5.1.0
 	github.com/nbutton23/zxcvbn-go v0.0.0-20210217022336-fa2cb2858354

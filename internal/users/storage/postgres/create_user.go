@@ -1,4 +1,4 @@
-package users_storage
+package users_storage_postgres
 
 import (
 	"context"
@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"github.com/egorkto/Chat-go/internal/domain"
-	storage_postgres "github.com/egorkto/Chat-go/internal/storage/postgres"
 	storage_postgres_gorm "github.com/egorkto/Chat-go/internal/storage/postgres/gorm"
+	"gorm.io/gorm"
 )
 
 func (s *UsersStorage) CreateUser(
@@ -15,7 +15,7 @@ func (s *UsersStorage) CreateUser(
 	user domain.User,
 	password string,
 ) (domain.User, error) {
-	cancel := s.db.WithTimeoutContext(ctx)
+	cancel := s.db.WithTimeout(ctx)
 	defer cancel()
 
 	model := storage_postgres_gorm.UserModel{
@@ -24,15 +24,19 @@ func (s *UsersStorage) CreateUser(
 		Password: password,
 	}
 
-	err := s.db.Create(&model)
+	err := s.db.DB.Create(&model).Error
 	if err != nil {
-		fmt.Println(err.Error())
-		fmt.Println(errors.Is(err, storage_postgres.ErrDuplicatedKey))
-		if errors.Is(err, storage_postgres.ErrDuplicatedKey) {
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
 			return domain.User{}, fmt.Errorf(
 				"duplicated user, %s: %w",
 				err.Error(),
 				domain.ErrConflict,
+			)
+		} else if errors.Is(err, gorm.ErrCheckConstraintViolated) {
+			return domain.User{}, fmt.Errorf(
+				"check violated, %s: %w",
+				err.Error(),
+				domain.ErrInvalidArgument,
 			)
 		}
 		return domain.User{}, fmt.Errorf("creating new user: %w", err)

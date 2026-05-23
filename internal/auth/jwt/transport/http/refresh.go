@@ -1,10 +1,11 @@
 package auth_jwt_transport_http
 
 import (
-	"log/slog"
+	"fmt"
 	"net/http"
 
 	transport_http "github.com/egorkto/Chat-go/internal/transport/http"
+	transport_http_echo "github.com/egorkto/Chat-go/internal/transport/http/echo"
 	"github.com/labstack/echo/v5"
 )
 
@@ -18,30 +19,26 @@ import (
 // @Failure      401       {object}  transport_http.ErrorResponse "Неавторизованный запрос"
 // @Failure 	 500       {object}  transport_http.ErrorResponse "Ошибка сервера"
 // @Router       /refresh [post]
-func (h *HTTPHandler) Refresh(e *echo.Context) error {
-	refreshToken, err := e.Cookie("refresh_token")
+func (h *HTTPHandler) Refresh(c *echo.Context) error {
+	refreshToken, err := c.Cookie("refresh_token")
 	if err != nil {
-		return e.JSON(
-			http.StatusUnauthorized,
-			transport_http.ErrorResponse{
-				Message: "refresh token is missing",
-				Err:     err.Error(),
-			})
+		return transport_http_echo.JSON_Error(
+			c,
+			"Unauthorized",
+			fmt.Errorf("get refresh token cookie: %w", err),
+		)
 	}
 
 	domainJWT, err := h.service.Refresh(
-		e.Request().Context(),
+		c.Request().Context(),
 		refreshToken.Value,
 	)
 	if err != nil {
-		e.Logger().Error("refresh token", slog.String("err", err.Error()))
-		code := transport_http.ErrorToHTTPCode(err)
-		return e.JSON(
-			code,
-			transport_http.ErrorResponse{
-				Message: "failed to refresh token",
-				Err:     err.Error(),
-			})
+		return transport_http_echo.JSON_Error(
+			c,
+			"Unauthorized",
+			fmt.Errorf("refresh token"),
+		)
 	}
 
 	access := domainJWT.Access
@@ -49,14 +46,11 @@ func (h *HTTPHandler) Refresh(e *echo.Context) error {
 
 	refreshExpires, err := h.service.GetTokenExpires(refresh)
 	if err != nil {
-		e.Logger().Error("get refresh token expires", slog.String("err", err.Error()))
-		code := transport_http.ErrorToHTTPCode(err)
-		return e.JSON(
-			code,
-			transport_http.ErrorResponse{
-				Message: "failed to get refresh token expires",
-				Err:     err.Error(),
-			})
+		return transport_http_echo.JSON_Error(
+			c,
+			"Unauthorized",
+			fmt.Errorf("get refresh token expires: %w", err),
+		)
 	}
 
 	cookie := transport_http.NewCookie(
@@ -67,7 +61,7 @@ func (h *HTTPHandler) Refresh(e *echo.Context) error {
 		true,
 	)
 
-	e.SetCookie(cookie)
+	c.SetCookie(cookie)
 
-	return e.JSON(http.StatusCreated, access)
+	return c.JSON(http.StatusCreated, access)
 }
