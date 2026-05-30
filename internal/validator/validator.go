@@ -1,6 +1,7 @@
 package validator
 
-type Validator struct{}
+type Validator struct {
+}
 
 func New() Validator {
 	return Validator{}

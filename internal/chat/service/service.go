@@ -30,7 +30,10 @@ type MessagesStorage interface {
 	) ([]domain.Message, error)
 }
 
-func New(usersStorage UsersStorage, msgStorage MessagesStorage) ChatService {
+func New(
+	usersStorage UsersStorage,
+	msgStorage MessagesStorage,
+) ChatService {
 	return ChatService{
 		usersStorage: usersStorage,
 		msgStorage:   msgStorage,

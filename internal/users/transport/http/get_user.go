@@ -5,8 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	transport_http "github.com/egorkto/Chat-go/internal/transport/http"
-	transport_http_echo "github.com/egorkto/Chat-go/internal/transport/http/echo"
+	"github.com/egorkto/Chat-go/internal/domain"
 	"github.com/labstack/echo/v5"
 )
 
@@ -26,33 +25,19 @@ import (
 func (h *HTTPHandler) GetUser(c *echo.Context) error {
 	idParam := c.Param("id")
 	if idParam == "" {
-		return c.JSON(
-			http.StatusBadRequest,
-			transport_http.ErrorResponse{
-				Message: "Bad Request",
-				Err:     "User ID parameter is missing",
-			},
-		)
+		return fmt.Errorf("id param is empty: %w", domain.NewValidationError(map[string]string{
+			"id": "id route param is empty",
+		}))
 	}
 
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		return c.JSON(
-			http.StatusBadRequest,
-			transport_http.ErrorResponse{
-				Message: "Bad Request",
-				Err:     "User ID parameter must be an integer",
-			},
-		)
+		return fmt.Errorf("atoi id param: %w", err)
 	}
 
 	user, err := h.service.GetUser(c.Request().Context(), id)
 	if err != nil {
-		return transport_http_echo.JSON_Error(
-			c,
-			"Unauthorized",
-			fmt.Errorf("get user: %w", err),
-		)
+		return fmt.Errorf("get user: %w", err)
 	}
 
 	response := domainToDTO(user)

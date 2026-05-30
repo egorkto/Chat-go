@@ -23,13 +23,13 @@ func (s *UsersStorage) GetUserByLogin(
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return domain.User{}, "", fmt.Errorf(
-				"user record not found, %s: %w",
+				"first, %s: %w",
 				err.Error(),
-				domain.ErrNotFound,
+				domain.ErrUserNotFoundByLogin,
 			)
 		}
 		return domain.User{}, "", fmt.Errorf(
-			"get user by login: %w",
+			"first: %w",
 			err,
 		)
 	}
@@ -52,13 +52,13 @@ func (s *UsersStorage) GetUserByID(
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return domain.User{}, fmt.Errorf(
-				"user record not found, %s: %w",
+				"first, %s: %w",
 				err.Error(),
-				domain.ErrNotFound,
+				domain.ErrUserNotFoundById,
 			)
 		} else {
 			return domain.User{}, fmt.Errorf(
-				"recieving user by id: %w",
+				"first: %w",
 				err,
 			)
 		}

@@ -6,7 +6,6 @@ import (
 
 	"github.com/egorkto/Chat-go/internal/domain"
 	transport_http "github.com/egorkto/Chat-go/internal/transport/http"
-	transport_http_echo "github.com/egorkto/Chat-go/internal/transport/http/echo"
 	"github.com/labstack/echo/v5"
 )
 
@@ -25,59 +24,47 @@ import (
 func (h *HTTPHandler) SignUp(c *echo.Context) error {
 	var request SignUpRequest
 	if err := c.Bind(&request); err != nil {
-		return transport_http_echo.JSON_Error(
-			c,
-			"failed to read request body",
-			fmt.Errorf("bind request: %w", err),
-		)
+		return fmt.Errorf(
+			"bind request, %s: %w",
+			err.Error(),
+			domain.NewValidationError(map[string]string{
+				"body": "invalid JSON format",
+			}))
 	}
 
 	if err := c.Validate(request); err != nil {
-		return transport_http_echo.JSON_Error(
-			c,
-			"failed to validate request",
-			fmt.Errorf("validate request, %v: %w", request, err),
-		)
+		return fmt.Errorf("validate: %w", transport_http.ParseValidateError(err))
 	}
 
 	domainUser := domain.NewUninitializedUser(request.FullName, request.Login)
 
-	registeredUser, token, err := h.service.SignUp(
+	registeredUser, pair, err := h.service.SignUp(
 		c.Request().Context(),
 		domainUser,
 		request.Password,
 	)
 	if err != nil {
-		return transport_http_echo.JSON_Error(
-			c,
-			"failed to sign up",
-			fmt.Errorf("sign up user: %w", err),
-		)
+		return fmt.Errorf("sign up: %w", err)
 	}
 
-	access := token.Access
-	refresh := token.Refresh
+	access := pair.Access
+	refresh := pair.Refresh
 
-	refreshExpires, err := h.service.GetTokenExpires(refresh)
 	if err != nil {
-		return transport_http_echo.JSON_Error(
-			c,
-			"failed to get refresh token expires",
-			fmt.Errorf("get refresh token expires: %w", err),
-		)
+		return fmt.Errorf("get refresh token expires: %w", err)
 	}
 
 	cookie := transport_http.NewCookie(
 		"refresh_token",
-		refresh,
-		refreshExpires,
+		refresh.Signed,
+		refresh.ExpiredAt,
 		"/refresh",
 		true,
 	)
 
 	c.SetCookie(cookie)
 
-	response := responseFromDomain(registeredUser, access)
+	response := responseFromDomain(registeredUser, access.Signed)
 
 	return c.JSON(http.StatusCreated, response)
 }

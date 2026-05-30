@@ -32,7 +32,7 @@ func (s ChatStorage) GetMessages(
 	models := make([]storage_postgres_gorm.MessageModel, sliceSize)
 
 	err := s.db.Preload("User").
-		Order("created_at DESC").
+		Order("sent_at DESC").
 		Limit(msgLimit).Offset(msgOffset).
 		Find(&models).Error
 	if err != nil {
@@ -42,7 +42,8 @@ func (s ChatStorage) GetMessages(
 		)
 	}
 
-	domainMsgs := make([]domain.Message, len(models))
+	domainMsgs := make([]domain.Message, 0, len(models))
+
 	for _, model := range models {
 		domainMsgs = append(domainMsgs, model.ToDomain())
 	}

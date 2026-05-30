@@ -15,14 +15,18 @@ func (s ChatService) GetMessages(
 	if limit != nil && *limit < 0 {
 		return []domain.Message{}, fmt.Errorf(
 			"limit must be non-negative: %w",
-			domain.ErrInvalidArgument,
+			domain.NewValidationError(map[string]string{
+				"limit": "limit must be non-negative",
+			}),
 		)
 	}
 
 	if offset != nil && *offset < 0 {
 		return []domain.Message{}, fmt.Errorf(
 			"offset must be non-negative: %w",
-			domain.ErrInvalidArgument,
+			domain.NewValidationError(map[string]string{
+				"offset": "offset must be non-negative",
+			}),
 		)
 	}
 

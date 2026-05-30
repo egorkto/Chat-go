@@ -10,6 +10,11 @@ type Client struct {
 	User domain.User
 }
 
-type MessageDTO struct {
+type MessageInput struct {
 	Text string `json:"text"`
+}
+
+type ErrorResponse struct {
+	Message string `json:"message"`
+	Error   string `json:"error"`
 }

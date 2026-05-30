@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/egorkto/Chat-go/internal/domain"
 	transport_http "github.com/egorkto/Chat-go/internal/transport/http"
-	transport_http_echo "github.com/egorkto/Chat-go/internal/transport/http/echo"
 	"github.com/labstack/echo/v5"
 )
 
@@ -22,41 +22,24 @@ import (
 func (h *HTTPHandler) Refresh(c *echo.Context) error {
 	refreshToken, err := c.Cookie("refresh_token")
 	if err != nil {
-		return transport_http_echo.JSON_Error(
-			c,
-			"Unauthorized",
-			fmt.Errorf("get refresh token cookie: %w", err),
-		)
+		return fmt.Errorf("get refresh token cookie, %s: %w", err.Error(), domain.ErrUnauthorized)
 	}
 
-	domainJWT, err := h.service.Refresh(
+	pair, err := h.service.Refresh(
 		c.Request().Context(),
 		refreshToken.Value,
 	)
 	if err != nil {
-		return transport_http_echo.JSON_Error(
-			c,
-			"Unauthorized",
-			fmt.Errorf("refresh token"),
-		)
+		return fmt.Errorf("refresh tokenЖ %w", err)
 	}
 
-	access := domainJWT.Access
-	refresh := domainJWT.Refresh
-
-	refreshExpires, err := h.service.GetTokenExpires(refresh)
-	if err != nil {
-		return transport_http_echo.JSON_Error(
-			c,
-			"Unauthorized",
-			fmt.Errorf("get refresh token expires: %w", err),
-		)
-	}
+	access := pair.Access
+	refresh := pair.Refresh
 
 	cookie := transport_http.NewCookie(
 		"refresh_token",
-		refresh,
-		refreshExpires,
+		refresh.Signed,
+		refresh.ExpiredAt,
 		"/refresh",
 		true,
 	)

@@ -18,7 +18,7 @@ func (s ChatStorage) CreateMessage(
 	model := storage_postgres_gorm.MessageModel{
 		Text:   msg.Text,
 		UserID: msg.Sender.ID(),
-		SendAt: msg.SendTime,
+		SentAt: msg.SendTime,
 	}
 
 	err := s.db.Create(&model).Error

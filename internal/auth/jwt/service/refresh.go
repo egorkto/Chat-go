@@ -3,65 +3,37 @@ package auth_jwt_service
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"strings"
 
-	"github.com/egorkto/Chat-go/internal/domain"
+	auth_jwt_token_manager "github.com/egorkto/Chat-go/internal/auth/jwt/token_manager"
 )
 
 func (s *AuthService) Refresh(
 	ctx context.Context,
 	refreshToken string,
-) (domain.JWT, error) {
+) (auth_jwt_token_manager.JWTPair, error) {
 	token, err := s.tokenManager.Verify(refreshToken)
 	if err != nil {
-		return domain.JWT{}, fmt.Errorf(
-			"verifying refresh token: %w",
+		return auth_jwt_token_manager.JWTPair{}, fmt.Errorf(
+			"verify refresh token: %w",
 			err,
 		)
 	}
 
-	sub, err := token.Claims.GetSubject()
+	user, err := s.storage.GetUserByID(ctx, token.UserID)
 	if err != nil {
-		return domain.JWT{}, fmt.Errorf(
-			"getting subject from token: %w",
+		return auth_jwt_token_manager.JWTPair{}, fmt.Errorf(
+			"gete user by id: %w",
 			err,
 		)
 	}
 
-	splited := strings.Split(sub, ":")
-	if len(splited) != 2 {
-		return domain.JWT{}, fmt.Errorf(
-			"invalid subject format: %s",
-			sub,
-		)
-	}
-
-	idStr := splited[1]
-
-	id, err := strconv.Atoi(idStr)
+	pair, err := s.tokenManager.Generate(user.ID(), user.Login())
 	if err != nil {
-		return domain.JWT{}, fmt.Errorf(
-			"converting id to integer: %w",
+		return auth_jwt_token_manager.JWTPair{}, fmt.Errorf(
+			"generate: %w",
 			err,
 		)
 	}
 
-	user, err := s.storage.GetUserByID(ctx, id)
-	if err != nil {
-		return domain.JWT{}, fmt.Errorf(
-			"getting user by id: %w",
-			err,
-		)
-	}
-
-	jwt, err := s.tokenManager.Generate(user)
-	if err != nil {
-		return domain.JWT{}, fmt.Errorf(
-			"generating jwt token: %w",
-			err,
-		)
-	}
-
-	return jwt, nil
+	return pair, nil
 }

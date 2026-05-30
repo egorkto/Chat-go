@@ -2,12 +2,10 @@ package users_storage_postgres
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/egorkto/Chat-go/internal/domain"
 	storage_postgres_gorm "github.com/egorkto/Chat-go/internal/storage/postgres/gorm"
-	"gorm.io/gorm"
 )
 
 func (s *UsersStorage) CreateUser(
@@ -26,20 +24,11 @@ func (s *UsersStorage) CreateUser(
 
 	err := s.db.DB.Create(&model).Error
 	if err != nil {
-		if errors.Is(err, gorm.ErrDuplicatedKey) {
-			return domain.User{}, fmt.Errorf(
-				"duplicated user, %s: %w",
-				err.Error(),
-				domain.ErrConflict,
-			)
-		} else if errors.Is(err, gorm.ErrCheckConstraintViolated) {
-			return domain.User{}, fmt.Errorf(
-				"check violated, %s: %w",
-				err.Error(),
-				domain.ErrInvalidArgument,
-			)
-		}
-		return domain.User{}, fmt.Errorf("creating new user: %w", err)
+		mapped := storage_postgres_gorm.MapConstrainedError(err)
+		return domain.User{}, fmt.Errorf(
+			"create user: %w",
+			mapped,
+		)
 	}
 	domainUser := model.ToDomain()
 

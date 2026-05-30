@@ -4,15 +4,13 @@ import (
 	"context"
 	"net/http"
 
-	chat_transport_websocket_hub "github.com/egorkto/Chat-go/internal/chat/transport/websocket/hub"
 	"github.com/egorkto/Chat-go/internal/domain"
 	"github.com/gorilla/websocket"
-	"github.com/labstack/echo/v5"
 )
 
 type HTTPHandler struct {
 	service ChatService
-	hub     WebsocketHub
+	hub     WSHub
 }
 
 type ChatService interface {
@@ -27,32 +25,14 @@ type ChatService interface {
 	) ([]domain.Message, error)
 }
 
-type WebsocketHub interface {
-	Upgrade(w http.ResponseWriter, r *http.Request) (*websocket.Conn, error)
-	ReadFrom(c chat_transport_websocket_hub.Client) error
+type WSHub interface {
+	Upgrade(rw http.ResponseWriter, r *http.Request) (*websocket.Conn, error)
+	ReadFrom(conn *websocket.Conn, user domain.User)
 }
 
-func New(service ChatService, hub WebsocketHub) HTTPHandler {
-	return HTTPHandler{
+func New(service ChatService, hub WSHub) *HTTPHandler {
+	return &HTTPHandler{
 		service: service,
 		hub:     hub,
-	}
-}
-
-func (h *HTTPHandler) Routes() []echo.Route {
-	return []echo.Route{
-		{
-			Method:  "GET",
-			Path:    "/history",
-			Handler: h.GetMessages,
-		},
-	}
-}
-
-func (h *HTTPHandler) ConnectWebsocketRoute() echo.Route {
-	return echo.Route{
-		Method:  "GET",
-		Path:    "/connect",
-		Handler: h.Connect,
 	}
 }

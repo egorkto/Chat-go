@@ -12,7 +12,7 @@ type MessageModel struct {
 	UserID  int       `gorm:"column:user_id"`
 	User    UserModel `gorm:"foreignKey:UserID;references:ID"`
 	Text    string    `gorm:"column:text"`
-	SendAt  time.Time `gorm:"column:send_at"`
+	SentAt  time.Time `gorm:"column:sent_at"`
 }
 
 func (m MessageModel) TableName() string {
@@ -25,6 +25,6 @@ func (m MessageModel) ToDomain() domain.Message {
 		m.Version,
 		m.User.ToDomain(),
 		m.Text,
-		m.SendAt,
+		m.SentAt,
 	)
 }

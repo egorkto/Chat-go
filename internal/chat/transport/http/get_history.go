@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
+	chat_transport "github.com/egorkto/Chat-go/internal/chat/transport"
 	"github.com/egorkto/Chat-go/internal/domain"
-	transport_http_echo "github.com/egorkto/Chat-go/internal/transport/http/echo"
 	"github.com/labstack/echo/v5"
 )
 
@@ -25,11 +25,9 @@ func (h HTTPHandler) GetMessages(c *echo.Context) error {
 	if limitParam != "" {
 		limit, err = strconv.Atoi(limitParam)
 		if err != nil {
-			return transport_http_echo.JSON_Error(
-				c,
-				"failed to get history",
-				fmt.Errorf("atoi limit: %w", domain.ErrInvalidArgument),
-			)
+			return fmt.Errorf("atoi limit: %w", domain.NewValidationError(map[string]string{
+				"limit": "limit query param is not a number",
+			}))
 		}
 	}
 
@@ -37,24 +35,18 @@ func (h HTTPHandler) GetMessages(c *echo.Context) error {
 	if offsetParam != "" {
 		offset, err = strconv.Atoi(offsetParam)
 		if err != nil {
-			return transport_http_echo.JSON_Error(
-				c,
-				"failed to get history",
-				fmt.Errorf("atoi offset: %w", err),
-			)
+			return fmt.Errorf("atoi offset: %w", domain.NewValidationError(map[string]string{
+				"offset": "offset query param is not a number",
+			}))
 		}
 	}
 
 	messages, err := h.service.GetMessages(c.Request().Context(), &limit, &offset)
 	if err != nil {
-		return transport_http_echo.JSON_Error(
-			c,
-			"failed to get history",
-			fmt.Errorf("get messages: %w", err),
-		)
+		return fmt.Errorf("get messages: %w", err)
 	}
 
-	response := dtoFromDomains(messages)
+	response := chat_transport.DtoFromDomains(messages)
 
 	c.JSON(http.StatusOK, response)
 

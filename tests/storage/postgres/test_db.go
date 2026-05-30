@@ -10,7 +10,7 @@ import (
 	"time"
 
 	storage_postgres_gorm "github.com/egorkto/Chat-go/internal/storage/postgres/gorm"
-	tests_utils "github.com/egorkto/Chat-go/tests/utils"
+	"github.com/egorkto/Chat-go/internal/utils"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	gorm_postgres "gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -18,14 +18,13 @@ import (
 
 func NewDB(
 	timeout time.Duration,
-	initMigration string,
 	t *testing.T,
 ) (*storage_postgres_gorm.GormDB, error) {
 	ctx := context.Background()
 
 	var migrations []string
 
-	migrationsDir := filepath.Join(tests_utils.GetProjectRoot(), "migrations")
+	migrationsDir := filepath.Join(utils.GetProjectRoot(), "migrations")
 	entries, err := os.ReadDir(migrationsDir)
 	for _, entry := range entries {
 		if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".up.sql") {

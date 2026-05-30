@@ -21,6 +21,9 @@ down-db:
 forward-port:
 	@docker compose up -d port-forwarder
 
+close-port:
+	@docker compose down port-forwarder
+
 run-chat:
 	@export LOGGER_FOLDER=${PROJECT_ROOT}/out/logs && \
 	export JWT_PRIVATE_PATH=${PROJECT_ROOT}/certs/app.rsa && \
@@ -62,7 +65,7 @@ migrate-action:
 clean-logs:
 	@read -p "Clean all log files? Logs will be lost. [y/N]: " ans; \
 	if [ "$$ans" = "y" ]; then \
-		sudo rm -rf ${PROJECT_ROOT}/out/logs && \
+		sudo rm -rf ${PROJECT_ROOT}/out/logs/* && \
 		echo "Logs was cleaned"; \
 	else \
 		echo "Clean canceled"; \
@@ -78,8 +81,6 @@ run-swag:
 generate-keys:
 	@openssl genrsa -out ${PROJECT_ROOT}/certs/app.rsa 1024 && \
 	openssl rsa -in ${PROJECT_ROOT}/certs/app.rsa -pubout -out ${PROJECT_ROOT}/certs/app.rsa.pub
-
-generate-test-keys:
-	@openssl genrsa -out ${PROJECT_ROOT}/tests/certs/test_app.rsa 1024 && \
-	openssl rsa -in ${PROJECT_ROOT}/tests/certs/test_app.rsa -pubout -out ${PROJECT_ROOT}/tests/certs/test_app.rsa.pub && \
-	openssl genrsa -out ${PROJECT_ROOT}/tests/certs/test_fake_app.rsa 1024
+	openssl genrsa -out ${PROJECT_ROOT}/certs/test_app.rsa 1024 && \
+	openssl rsa -in ${PROJECT_ROOT}/certs/test_app.rsa -pubout -out ${PROJECT_ROOT}/tests/certs/test_app.rsa.pub && \
+	openssl genrsa -out ${PROJECT_ROOT}/certs/test_fake_app.rsa 1024

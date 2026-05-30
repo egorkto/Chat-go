@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/egorkto/Chat-go/internal/domain"
 	transport_http "github.com/egorkto/Chat-go/internal/transport/http"
-	transport_http_echo "github.com/egorkto/Chat-go/internal/transport/http/echo"
 	"github.com/labstack/echo/v5"
 )
 
@@ -24,57 +24,41 @@ import (
 func (h *HTTPHandler) LogIn(c *echo.Context) error {
 	var request LogInRequest
 	if err := c.Bind(&request); err != nil {
-		return transport_http_echo.JSON_Error(
-			c,
-			"failed to log in",
-			fmt.Errorf("bind request: %w", err),
-		)
+		return fmt.Errorf(
+			"bind request, %s: %w",
+			err.Error(),
+			domain.NewValidationError(map[string]string{
+				"body": "invalid JSON format",
+			}))
 	}
 
 	if err := c.Validate(request); err != nil {
-		return transport_http_echo.JSON_Error(
-			c,
-			"wrong login or password",
-			fmt.Errorf("validate request: %w", err),
-		)
+		return fmt.Errorf("validate: %w", transport_http.ParseValidateError(err))
 	}
 
-	user, domainJWT, err := h.service.LogIn(
+	user, pair, err := h.service.LogIn(
 		c.Request().Context(),
 		request.Login,
 		request.Password,
 	)
 	if err != nil {
-		return transport_http_echo.JSON_Error(
-			c,
-			"wrong login or password",
-			fmt.Errorf("log in user: %w", err),
-		)
+		return fmt.Errorf("log in: %w", err)
 	}
 
-	access := domainJWT.Access
-	refresh := domainJWT.Refresh
-
-	refreshExpires, err := h.service.GetTokenExpires(refresh)
-	if err != nil {
-		return transport_http_echo.JSON_Error(
-			c,
-			"failed to log in",
-			fmt.Errorf("get refreshg token expires: %w", err),
-		)
-	}
+	access := pair.Access
+	refresh := pair.Refresh
 
 	cookie := transport_http.NewCookie(
 		"refresh_token",
-		refresh,
-		refreshExpires,
+		refresh.Signed,
+		refresh.ExpiredAt,
 		"/refresh",
 		true,
 	)
 
 	c.SetCookie(cookie)
 
-	response := responseFromDomain(user, access)
+	response := responseFromDomain(user, access.Signed)
 
 	return c.JSON(http.StatusOK, response)
 }
