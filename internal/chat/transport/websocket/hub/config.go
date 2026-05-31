@@ -7,9 +7,10 @@ import (
 )
 
 type Config struct {
-	ReadBufferSize  int `envconfig:"READ_BUFFER_SIZE" default:"1024"`
-	WriteBufferSize int `envconfig:"WRITE_BUFFER_SIZE" default:"1024"`
-	SaveBufferSize  int `envconfig:"SAVE_BUFFER_SIZE" default:"512"`
+	ReadBufferSize      int `envconfig:"READ_BUFFER_SIZE" default:"1024"`
+	WriteBufferSize     int `envconfig:"WRITE_BUFFER_SIZE" default:"1024"`
+	SaveBufferSize      int `envconfig:"SAVE_BUFFER_SIZE" default:"512"`
+	CientSendBufferSize int `envconfig:"CLIENT_SEND_BUFFER_SIZE" default:"256"`
 }
 
 func NewConfigMust() Config {

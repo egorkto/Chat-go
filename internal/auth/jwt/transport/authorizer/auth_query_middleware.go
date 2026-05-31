@@ -13,11 +13,11 @@ func (a Authorizer) AuthorizeQueryMiddleware() func(next echo.HandlerFunc) echo.
 
 			token, err := a.verifier.Verify(tokenString)
 			if err != nil {
-				return fmt.Errorf("identify: %w", err)
+				return fmt.Errorf("verify: %w", err)
 			}
 
-			c.Set("login", token.UserID)
-			c.Set("id", token.UserLogin)
+			c.Set("id", token.UserID)
+			c.Set("login", token.UserLogin)
 
 			return next(c)
 		}
