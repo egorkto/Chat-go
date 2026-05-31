@@ -80,7 +80,7 @@ run-swag:
 
 generate-keys:
 	@openssl genrsa -out ${PROJECT_ROOT}/certs/app.rsa 1024 && \
-	openssl rsa -in ${PROJECT_ROOT}/certs/app.rsa -pubout -out ${PROJECT_ROOT}/certs/app.rsa.pub
+	openssl rsa -in ${PROJECT_ROOT}/certs/app.rsa -pubout -out ${PROJECT_ROOT}/certs/app.rsa.pub && \
 	openssl genrsa -out ${PROJECT_ROOT}/certs/test_app.rsa 1024 && \
-	openssl rsa -in ${PROJECT_ROOT}/certs/test_app.rsa -pubout -out ${PROJECT_ROOT}/tests/certs/test_app.rsa.pub && \
+	openssl rsa -in ${PROJECT_ROOT}/certs/test_app.rsa -pubout -out ${PROJECT_ROOT}/certs/test_app.rsa.pub && \
 	openssl genrsa -out ${PROJECT_ROOT}/certs/test_fake_app.rsa 1024

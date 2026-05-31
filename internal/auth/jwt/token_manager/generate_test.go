@@ -35,22 +35,22 @@ func TestGenerate_Subject(t *testing.T) {
 	}
 
 	err = testToken(pair.Access, validUser)
-	assert.NoError(t, err, "failed to test access token")
+	assert.NoError(t, err, "failed to test access token: %w", err)
 
 	err = testToken(pair.Refresh, validUser)
-	assert.NoError(t, err, "failed to test refresh token")
+	assert.NoError(t, err, "failed to test refresh token: %w", err)
 }
 
 func testToken(token auth_jwt_token_manager.Token, user domain.User) error {
 	if token.UserID != user.ID() {
-		return fmt.Errorf("invalid token user id, expected: %s have: %s",
+		return fmt.Errorf("invalid token user id, expected: %d got: %d",
 			user.ID(),
 			token.UserID,
 		)
 	}
 
 	if token.UserLogin != user.Login() {
-		return fmt.Errorf("invalid token user login, expected: %s have: %s",
+		return fmt.Errorf("invalid token user login, expected: %s got: %s",
 			user.Login(),
 			token.UserLogin,
 		)
@@ -83,7 +83,7 @@ func testToken(token auth_jwt_token_manager.Token, user domain.User) error {
 		return fmt.Errorf("subject claim is not a string: %s", sub)
 	}
 
-	expectedSub := fmt.Sprintf("%s:%d", user.Login(), user.ID())
+	expectedSub := fmt.Sprintf("%d:%s", user.ID(), user.Login())
 
 	if subStr != expectedSub {
 		return fmt.Errorf(

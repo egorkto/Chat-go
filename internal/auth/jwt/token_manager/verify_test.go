@@ -116,7 +116,7 @@ func TestVerify_FakeSign(t *testing.T) {
 	cfg := getTokenMangerValidConfig()
 
 	root := utils.GetProjectRoot()
-	fakePath := filepath.Join(root, "tests", "certs", "test_fake_app.rsa")
+	fakePath := filepath.Join(root, "certs", "test_fake_app.rsa")
 
 	cfg.PrivatePath = fakePath
 

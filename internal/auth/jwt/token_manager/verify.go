@@ -64,8 +64,8 @@ func getLoginIDFromToken(token *jwt.Token) (string, int, error) {
 		)
 	}
 
-	login := splited[0]
-	strID := splited[1]
+	strID := splited[0]
+	login := splited[1]
 
 	id, err := strconv.Atoi(strID)
 	if err != nil {
