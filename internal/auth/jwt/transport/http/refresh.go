@@ -1,9 +1,10 @@
 package auth_jwt_transport_http
 
 import (
-	"log/slog"
+	"fmt"
 	"net/http"
 
+	"github.com/egorkto/Chat-go/internal/domain"
 	transport_http "github.com/egorkto/Chat-go/internal/transport/http"
 	"github.com/labstack/echo/v5"
 )
@@ -18,56 +19,32 @@ import (
 // @Failure      401       {object}  transport_http.ErrorResponse "Неавторизованный запрос"
 // @Failure 	 500       {object}  transport_http.ErrorResponse "Ошибка сервера"
 // @Router       /refresh [post]
-func (h *HTTPHandler) Refresh(e *echo.Context) error {
-	refreshToken, err := e.Cookie("refresh_token")
+func (h *HTTPHandler) Refresh(c *echo.Context) error {
+	refreshToken, err := c.Cookie("refresh_token")
 	if err != nil {
-		return e.JSON(
-			http.StatusUnauthorized,
-			transport_http.ErrorResponse{
-				Message: "refresh token is missing",
-				Err:     err.Error(),
-			})
+		return fmt.Errorf("get refresh token cookie, %s: %w", err.Error(), domain.ErrUnauthorized)
 	}
 
-	domainJWT, err := h.service.Refresh(
-		e.Request().Context(),
+	pair, err := h.service.Refresh(
+		c.Request().Context(),
 		refreshToken.Value,
 	)
 	if err != nil {
-		e.Logger().Error("refresh token", slog.String("err", err.Error()))
-		code := transport_http.ErrorToHTTPCode(err)
-		return e.JSON(
-			code,
-			transport_http.ErrorResponse{
-				Message: "failed to refresh token",
-				Err:     err.Error(),
-			})
+		return fmt.Errorf("refresh tokenЖ %w", err)
 	}
 
-	access := domainJWT.Access
-	refresh := domainJWT.Refresh
-
-	refreshExpires, err := h.service.GetTokenExpires(refresh)
-	if err != nil {
-		e.Logger().Error("get refresh token expires", slog.String("err", err.Error()))
-		code := transport_http.ErrorToHTTPCode(err)
-		return e.JSON(
-			code,
-			transport_http.ErrorResponse{
-				Message: "failed to get refresh token expires",
-				Err:     err.Error(),
-			})
-	}
+	access := pair.Access
+	refresh := pair.Refresh
 
 	cookie := transport_http.NewCookie(
 		"refresh_token",
-		refresh,
-		refreshExpires,
+		refresh.Signed,
+		refresh.ExpiredAt,
 		"/refresh",
 		true,
 	)
 
-	e.SetCookie(cookie)
+	c.SetCookie(cookie)
 
-	return e.JSON(http.StatusCreated, access)
+	return c.JSON(http.StatusCreated, access)
 }

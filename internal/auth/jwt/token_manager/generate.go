@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/egorkto/Chat-go/internal/domain"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func (tm TokenManager) Generate(u domain.User) (domain.JWT, error) {
-	subject := fmt.Sprintf("%s:%v", u.Login(), u.ID())
+func (tm TokenManager) Generate(userID int, userLogin string) (JWTPair, error) {
+	subject := fmt.Sprintf("%v:%v", userID, userLogin)
 
 	accessIssued := jwt.NewNumericDate(time.Now())
 	accessExpired := jwt.NewNumericDate(accessIssued.Add(tm.cfg.AccessExpired))
@@ -38,24 +37,34 @@ func (tm TokenManager) Generate(u domain.User) (domain.JWT, error) {
 
 	accessString, err := accessToken.SignedString(tm.privateKey)
 	if err != nil {
-		return domain.JWT{}, fmt.Errorf(
-			"signing access token: %w",
+		return JWTPair{}, fmt.Errorf(
+			"signed access string: %w",
 			err,
 		)
 	}
 
 	refreshString, err := refreshToken.SignedString(tm.privateKey)
 	if err != nil {
-		return domain.JWT{}, fmt.Errorf(
-			"signing refresh token: %w",
+		return JWTPair{}, fmt.Errorf(
+			"signed refresh string: %w",
 			err,
 		)
 	}
 
-	jwt := domain.JWT{
-		Access:  accessString,
-		Refresh: refreshString,
+	pair := JWTPair{
+		Access: Token{
+			Signed:    accessString,
+			UserID:    userID,
+			UserLogin: userLogin,
+			ExpiredAt: accessExpired.Time,
+		},
+		Refresh: Token{
+			Signed:    refreshString,
+			UserID:    userID,
+			UserLogin: userLogin,
+			ExpiredAt: refreshExpired.Time,
+		},
 	}
 
-	return jwt, nil
+	return pair, nil
 }

@@ -2,11 +2,9 @@ package auth_jwt_transport_http
 
 import (
 	"context"
-	"net/http"
-	"time"
 
+	auth_jwt_token_manager "github.com/egorkto/Chat-go/internal/auth/jwt/token_manager"
 	"github.com/egorkto/Chat-go/internal/domain"
-	"github.com/labstack/echo/v5"
 )
 
 type HTTPHandler struct {
@@ -18,44 +16,22 @@ type AuthService interface {
 		ctx context.Context,
 		user domain.User,
 		password string,
-	) (domain.User, domain.JWT, error)
+	) (domain.User, auth_jwt_token_manager.JWTPair, error)
 
 	LogIn(
 		ctx context.Context,
 		login string,
 		password string,
-	) (domain.User, domain.JWT, error)
+	) (domain.User, auth_jwt_token_manager.JWTPair, error)
 
 	Refresh(
 		ctx context.Context,
 		refreshToken string,
-	) (domain.JWT, error)
-
-	GetTokenExpires(token string) (time.Time, error)
+	) (auth_jwt_token_manager.JWTPair, error)
 }
 
 func New(s AuthService) *HTTPHandler {
 	return &HTTPHandler{
 		service: s,
-	}
-}
-
-func (h *HTTPHandler) Routes() []echo.Route {
-	return []echo.Route{
-		{
-			Method:  http.MethodPost,
-			Path:    "/sign-up",
-			Handler: h.SignUp,
-		},
-		{
-			Method:  http.MethodPost,
-			Path:    "/log-in",
-			Handler: h.LogIn,
-		},
-		{
-			Method:  http.MethodPost,
-			Path:    "/refresh",
-			Handler: h.Refresh,
-		},
 	}
 }

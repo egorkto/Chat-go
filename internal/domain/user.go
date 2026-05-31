@@ -1,20 +1,11 @@
 package domain
 
-import (
-	"fmt"
-)
-
 type User struct {
 	id       int
 	version  int
 	fullName string
 	login    string
 }
-
-const (
-	UninitializedID      = -1
-	UninitializedVersion = -1
-)
 
 func NewUser(
 	id int,
@@ -59,22 +50,20 @@ func (u User) Login() string {
 }
 
 func (u User) Validate() error {
+	valErrors := make(map[string]string)
+
 	nameLen := len([]rune(u.fullName))
 	if nameLen < 3 || nameLen > 100 {
-		return fmt.Errorf(
-			"invalid 'FullName' length %d: %w",
-			nameLen,
-			ErrInvalidArgument,
-		)
+		valErrors["full_name"] = "full_name must be between 3 and 100 symbols"
 	}
 
 	loginLen := len([]rune(u.login))
 	if loginLen < 3 || loginLen > 25 {
-		return fmt.Errorf(
-			"invalid 'Login' length %d: %w",
-			loginLen,
-			ErrInvalidArgument,
-		)
+		valErrors["login"] = "login must be between 3 and 25 symbols"
+	}
+
+	if len(valErrors) != 0 {
+		return NewValidationError(valErrors)
 	}
 
 	return nil

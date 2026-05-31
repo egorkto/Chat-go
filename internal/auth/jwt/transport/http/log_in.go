@@ -1,9 +1,10 @@
 package auth_jwt_transport_http
 
 import (
-	"log/slog"
+	"fmt"
 	"net/http"
 
+	"github.com/egorkto/Chat-go/internal/domain"
 	transport_http "github.com/egorkto/Chat-go/internal/transport/http"
 	"github.com/labstack/echo/v5"
 )
@@ -20,70 +21,44 @@ import (
 // @Failure		 404       {object}  transport_http.ErrorResponse "Пользователь не найден"
 // @Failure 	 500       {object}  transport_http.ErrorResponse "Ошибка сервера"
 // @Router       /log-in [post]
-func (h *HTTPHandler) LogIn(e *echo.Context) error {
+func (h *HTTPHandler) LogIn(c *echo.Context) error {
 	var request LogInRequest
-	if err := e.Bind(&request); err != nil {
-		e.Logger().Error("bind request", slog.String("err", err.Error()))
-		return e.JSON(
-			http.StatusBadRequest,
-			transport_http.ErrorResponse{
-				Message: "failed to read request body",
-				Err:     err.Error(),
-			})
+	if err := c.Bind(&request); err != nil {
+		return fmt.Errorf(
+			"bind request, %s: %w",
+			err.Error(),
+			domain.NewValidationError(map[string]string{
+				"body": "invalid JSON format",
+			}))
 	}
 
-	if err := e.Validate(request); err != nil {
-		e.Logger().Error("validate request", slog.String("err", err.Error()))
-		return e.JSON(
-			http.StatusBadRequest,
-			transport_http.ErrorResponse{
-				Message: "failed to validate request",
-				Err:     err.Error(),
-			})
+	if err := c.Validate(request); err != nil {
+		return fmt.Errorf("validate: %w", transport_http.ParseValidateError(err))
 	}
 
-	user, domainJWT, err := h.service.LogIn(
-		e.Request().Context(),
+	user, pair, err := h.service.LogIn(
+		c.Request().Context(),
 		request.Login,
 		request.Password,
 	)
 	if err != nil {
-		e.Logger().Error("log in user", slog.String("err", err.Error()))
-		code := transport_http.ErrorToHTTPCode(err)
-		return e.JSON(
-			code,
-			transport_http.ErrorResponse{
-				Message: "failed to log in",
-				Err:     err.Error(),
-			})
+		return fmt.Errorf("log in: %w", err)
 	}
 
-	access := domainJWT.Access
-	refresh := domainJWT.Refresh
-
-	refreshExpires, err := h.service.GetTokenExpires(refresh)
-	if err != nil {
-		e.Logger().Error("get refresh token expires", slog.String("err", err.Error()))
-		code := transport_http.ErrorToHTTPCode(err)
-		return e.JSON(
-			code,
-			transport_http.ErrorResponse{
-				Message: "failed to get refresh token expires",
-				Err:     err.Error(),
-			})
-	}
+	access := pair.Access
+	refresh := pair.Refresh
 
 	cookie := transport_http.NewCookie(
 		"refresh_token",
-		refresh,
-		refreshExpires,
+		refresh.Signed,
+		refresh.ExpiredAt,
 		"/refresh",
 		true,
 	)
 
-	e.SetCookie(cookie)
+	c.SetCookie(cookie)
 
-	response := responseFromDomain(user, access)
+	response := responseFromDomain(user, access.Signed)
 
-	return e.JSON(http.StatusOK, response)
+	return c.JSON(http.StatusOK, response)
 }

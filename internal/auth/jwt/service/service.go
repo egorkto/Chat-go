@@ -2,10 +2,9 @@ package auth_jwt_service
 
 import (
 	"context"
-	"time"
 
+	auth_jwt_token_manager "github.com/egorkto/Chat-go/internal/auth/jwt/token_manager"
 	"github.com/egorkto/Chat-go/internal/domain"
-	"github.com/golang-jwt/jwt/v5"
 )
 
 type AuthService struct {
@@ -15,13 +14,12 @@ type AuthService struct {
 }
 
 type TokenManager interface {
-	Generate(u domain.User) (domain.JWT, error)
-	Verify(token string) (*jwt.Token, error)
-	GetExpires(token string) (time.Time, error)
+	Generate(userID int, userLogin string) (auth_jwt_token_manager.JWTPair, error)
+	Verify(token string) (auth_jwt_token_manager.Token, error)
 }
 
 type Validator interface {
-	ValidatePassword(pass string, name string) error
+	ValidatePassword(pass string, user domain.User) error
 }
 
 type UsersStorage interface {

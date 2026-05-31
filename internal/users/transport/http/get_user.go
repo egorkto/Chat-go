@@ -1,10 +1,11 @@
 package users_transport_http
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
-	transport_http "github.com/egorkto/Chat-go/internal/transport/http"
+	"github.com/egorkto/Chat-go/internal/domain"
 	"github.com/labstack/echo/v5"
 )
 
@@ -21,41 +22,25 @@ import (
 // @Failure      404       {object}  transport_http.ErrorResponse "Пользователь не найден"
 // @Failure 	 500       {object}  transport_http.ErrorResponse "Ошибка сервера"
 // @Router       /users/{id} [get]
-func (h *HTTPHandler) GetUser(e *echo.Context) error {
-	idParam := e.Param("id")
+func (h *HTTPHandler) GetUser(c *echo.Context) error {
+	idParam := c.Param("id")
 	if idParam == "" {
-		return e.JSON(
-			http.StatusBadRequest,
-			transport_http.ErrorResponse{
-				Message: "Bad Request",
-				Err:     "User ID parameter is missing",
-			},
-		)
+		return fmt.Errorf("id param is empty: %w", domain.NewValidationError(map[string]string{
+			"id": "id route param is empty",
+		}))
 	}
 
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		return e.JSON(
-			http.StatusBadRequest,
-			transport_http.ErrorResponse{
-				Message: "Bad Request",
-				Err:     "User ID parameter must be an integer",
-			},
-		)
+		return fmt.Errorf("atoi id param: %w", err)
 	}
 
-	user, err := h.service.GetUser(e.Request().Context(), id)
+	user, err := h.service.GetUser(c.Request().Context(), id)
 	if err != nil {
-		return e.JSON(
-			http.StatusUnauthorized,
-			transport_http.ErrorResponse{
-				Message: "Unauthorized",
-				Err:     err.Error(),
-			},
-		)
+		return fmt.Errorf("get user: %w", err)
 	}
 
 	response := domainToDTO(user)
 
-	return e.JSON(http.StatusOK, response)
+	return c.JSON(http.StatusOK, response)
 }
