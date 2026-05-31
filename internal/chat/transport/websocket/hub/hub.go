@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"sync"
 	"time"
 
 	chat_transport "github.com/egorkto/Chat-go/internal/chat/transport"
@@ -13,14 +12,26 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type Client struct {
+	conn *websocket.Conn
+	user domain.User
+	send chan *chat_transport.MessageDTO
+}
+
 type Hub struct {
-	upgrader     websocket.Upgrader
-	clients      map[Client]struct{}
-	clientsMutex *sync.RWMutex
-	broadcast    chan *chat_transport.MessageDTO
-	saver        MessagesSaver
-	saveQueue    chan *domain.Message
-	log          *slog.Logger
+	upgrader  websocket.Upgrader
+	broadcast chan *chat_transport.MessageDTO
+
+	register   chan *Client
+	unregister chan *Client
+
+	clients              map[*Client]struct{}
+	clientSaveBufferSize int
+
+	saver     MessagesSaver
+	saveQueue chan *domain.Message
+
+	log *slog.Logger
 }
 
 type MessagesSaver interface {
@@ -33,17 +44,51 @@ func New(cfg Config, saver MessagesSaver, log *slog.Logger) *Hub {
 			ReadBufferSize:  cfg.ReadBufferSize,
 			WriteBufferSize: cfg.WriteBufferSize,
 		},
-		clients:      make(map[Client]struct{}),
-		clientsMutex: &sync.RWMutex{},
-		broadcast:    make(chan *chat_transport.MessageDTO),
-		saver:        saver,
-		saveQueue:    make(chan *domain.Message, cfg.SaveBufferSize),
-		log:          log,
+		broadcast:            make(chan *chat_transport.MessageDTO),
+		register:             make(chan *Client),
+		unregister:           make(chan *Client),
+		clients:              make(map[*Client]struct{}),
+		clientSaveBufferSize: cfg.SaveBufferSize,
+		saver:                saver,
+		saveQueue:            make(chan *domain.Message, cfg.SaveBufferSize),
+		log:                  log,
 	}
 
-	go h.SaveWorker()
-
 	return h
+}
+
+func (h *Hub) Run(ctx context.Context) {
+	go h.saveWorker(ctx)
+
+	for {
+		select {
+		case <-ctx.Done():
+			for c := range h.clients {
+				close(c.send)
+				delete(h.clients, c)
+			}
+			return
+
+		case c := <-h.register:
+			h.clients[c] = struct{}{}
+
+		case c := <-h.unregister:
+			if _, ok := h.clients[c]; ok {
+				close(c.send)
+				delete(h.clients, c)
+			}
+
+		case msg := <-h.broadcast:
+			for c := range h.clients {
+				select {
+				case c.send <- msg:
+				default:
+					close(c.send)
+					delete(h.clients, c)
+				}
+			}
+		}
+	}
 }
 
 func (h *Hub) Upgrade(rw http.ResponseWriter, r *http.Request) (*websocket.Conn, error) {
@@ -55,61 +100,28 @@ func (h *Hub) Upgrade(rw http.ResponseWriter, r *http.Request) (*websocket.Conn,
 	return conn, nil
 }
 
-func (h *Hub) StartBroadcasting() {
-	for msg := range h.broadcast {
-		h.clientsMutex.RLock()
-
-		for client := range h.clients {
-			if err := client.Conn.WriteJSON(msg); err != nil {
-				h.log.Error(
-					"writing json",
-					slog.String("err", err.Error()),
-				)
-			}
-
-			h.log.Debug("send broadcast message", slog.String("text", msg.Text))
-		}
-
-		h.clientsMutex.RUnlock()
-	}
-}
-
 func (h *Hub) ReadFrom(conn *websocket.Conn, user domain.User) {
-	client := Client{
-		Conn: conn,
-		User: user,
+	c := &Client{
+		conn: conn,
+		user: user,
+		send: make(chan *chat_transport.MessageDTO, h.clientSaveBufferSize),
 	}
 
-	h.clientsMutex.Lock()
-	h.clients[client] = struct{}{}
-	h.clientsMutex.Unlock()
+	h.register <- c
+	defer func() { h.unregister <- c }()
 
-	defer func() {
-		h.clientsMutex.Lock()
-		delete(h.clients, client)
-		h.clientsMutex.Unlock()
-	}()
+	go h.writePump(c)
 
 	for {
 		msg := new(MessageInput)
-		if err := client.Conn.ReadJSON(msg); err != nil {
+		if err := c.conn.ReadJSON(msg); err != nil {
 			h.log.Debug("read json", slog.String("err", err.Error()))
-			client.Conn.WriteJSON(
-				ErrorResponse{
-					Message: "failed to send message",
-					Error:   "bad request",
-				},
-			)
+			return
 		}
 
-		h.log.Debug("recieved message", slog.String("text", msg.Text))
+		h.log.Debug("received message", slog.String("text", msg.Text))
 
-		domainMsg := domain.NewUninitializedMessage(
-			client.User,
-			msg.Text,
-			time.Now(),
-		)
-
+		domainMsg := domain.NewUninitializedMessage(c.user, msg.Text, time.Now())
 		dto := chat_transport.DtoFromDomain(domainMsg)
 
 		h.broadcast <- &dto
@@ -117,10 +129,31 @@ func (h *Hub) ReadFrom(conn *websocket.Conn, user domain.User) {
 	}
 }
 
-func (h Hub) SaveWorker() {
-	for msg := range h.saveQueue {
-		if err := h.saver.SaveMessage(context.Background(), *msg); err != nil {
-			h.log.Error("save message", slog.String("err", err.Error()))
+func (h *Hub) writePump(c *Client) {
+	defer c.conn.Close()
+
+	for msg := range c.send {
+		if err := c.conn.WriteJSON(msg); err != nil {
+			h.log.Error("write json", slog.String("err", err.Error()))
+			return
+		}
+
+		h.log.Debug("sent message", slog.String("text", msg.Text))
+	}
+}
+
+func (h *Hub) saveWorker(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case msg, ok := <-h.saveQueue:
+			if !ok {
+				return
+			}
+			if err := h.saver.SaveMessage(ctx, *msg); err != nil {
+				h.log.Error("save message", slog.String("err", err.Error()))
+			}
 		}
 	}
 }

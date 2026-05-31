@@ -35,7 +35,11 @@ func (tm TokenManager) Verify(token string) (Token, error) {
 
 	expiredAt, err := t.Claims.GetExpirationTime()
 	if err != nil {
-		return Token{}, fmt.Errorf("get expiration time, %s: %w", err.Error(), domain.ErrUnauthorized)
+		return Token{}, fmt.Errorf(
+			"get expiration time, %s: %w",
+			err.Error(),
+			domain.ErrUnauthorized,
+		)
 	}
 
 	return Token{

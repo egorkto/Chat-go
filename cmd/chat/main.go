@@ -114,7 +114,7 @@ func main() {
 	serverCfg := transport_http_server.NewConfigMust()
 	server := transport_http_server.New(serverCfg, echoRouter, logger.Logger)
 
-	go wsHub.StartBroadcasting()
+	go wsHub.Run(ctx)
 
 	if err := server.Run(ctx); err != nil {
 		logger.Error("server stopped", slog.String("error", err.Error()))
