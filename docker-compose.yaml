@@ -6,12 +6,16 @@ services:
     container_name: chat-app
     environment:
       - LOGGER_LEVEL=${LOGGER_LEVEL}
+      - LOGGER_FOLDER=/app/out/logs
+
       - HTTP_SERVER_PORT=${HTTP_SERVER_PORT}
 
       - JWT_ACCESS_EXP=${JWT_ACCESS_EXP}
-      - JWT_REFRESH_EXP_DAYS=${JWT_REFRESH_EXP_DAYS}
+      - JWT_REFRESH_EXP=${JWT_REFRESH_EXP}
       - JWT_ISS=${JWT_ISS}
       - JWT_AUD=${JWT_AUD}
+      - JWT_PRIVATE_PATH=/app/certs/app.rsa
+      - JWT_PUBLIC_PATH=/app/certs/app.rsa.pub
 
       - POSTGRES_HOST=postgres-db
       - POSTGRES_USER=${POSTGRES_USER}
@@ -20,7 +24,9 @@ services:
       - POSTGRES_TIMEOUT=${POSTGRES_TIMEOUT}
       - POSTGRES_PORT=${POSTGRES_PORT}
     volumes:
-      - chat-logs:/app/out/logs
+      - ${PROJECT_ROOT}/out/logs:/app/out/logs
+      - ${PROJECT_ROOT}/certs:/app/certs:ro
+      - ${PROJECT_ROOT}/web:/app/web:ro
     ports:
       - "8081:${HTTP_SERVER_PORT}"
     restart: always

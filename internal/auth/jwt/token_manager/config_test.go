@@ -15,11 +15,11 @@ func getTokenMangerValidConfig() auth_jwt_token_manager.Config {
 	publicPath := filepath.Join(root, "certs", "test_app.rsa.pub")
 
 	return auth_jwt_token_manager.Config{
-		PrivatePath:    privatePath,
-		PublicPath:     publicPath,
-		AccessExpired:  15 * time.Minute,
-		RefreshExpired: 24 * 7 * time.Hour,
-		Issuer:         "test-issuer",
-		Audience:       "test-audience",
+		PrivatePath:       privatePath,
+		PublicPath:        publicPath,
+		AccessExpiration:  15 * time.Minute,
+		RefreshExpiration: 24 * 7 * time.Hour,
+		Issuer:            "test-issuer",
+		Audience:          "test-audience",
 	}
 }

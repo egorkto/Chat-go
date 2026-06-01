@@ -35,6 +35,12 @@ run-chat:
 deploy-chat:
 	@docker compose up -d --build chat-app
 
+down-chat:
+	@docker compose down chat-app
+
+ps:
+	@docker compose ps
+
 create-migration:
 	@if [ -z "$(seq)" ]; then \
 		echo "seq not set!"; \

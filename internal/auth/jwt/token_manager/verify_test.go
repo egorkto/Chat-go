@@ -75,8 +75,8 @@ func TestVerify_Expiration(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			cfg := getTokenMangerValidConfig()
 
-			cfg.AccessExpired = tc.accessExpired
-			cfg.RefreshExpired = tc.refreshExpired
+			cfg.AccessExpiration = tc.accessExpired
+			cfg.RefreshExpiration = tc.refreshExpired
 
 			tm, err := auth_jwt_token_manager.New(cfg)
 			if err != nil {

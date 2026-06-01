@@ -11,10 +11,10 @@ func (tm TokenManager) Generate(userID int, userLogin string) (JWTPair, error) {
 	subject := fmt.Sprintf("%v:%v", userID, userLogin)
 
 	accessIssued := jwt.NewNumericDate(time.Now())
-	accessExpired := jwt.NewNumericDate(accessIssued.Add(tm.cfg.AccessExpired))
+	accessExpired := jwt.NewNumericDate(accessIssued.Add(tm.cfg.AccessExpiration))
 
 	refreshIssued := jwt.NewNumericDate(time.Now())
-	refreshExpired := jwt.NewNumericDate(refreshIssued.Add(tm.cfg.RefreshExpired))
+	refreshExpired := jwt.NewNumericDate(refreshIssued.Add(tm.cfg.RefreshExpiration))
 
 	accessClaims := jwt.RegisteredClaims{
 		Issuer:    tm.cfg.Issuer,
