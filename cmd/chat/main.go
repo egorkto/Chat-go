@@ -38,10 +38,15 @@ import (
 // @contact.url    http://github.com/egorkto
 // @host      localhost:5845
 // @BasePath  /
+// @securityDefinitions.apikey QueryAuth
+// @in                         query
+// @name                       token
+// @description                Вставьте токен
 // @securityDefinitions.apikey BearerAuth
 // @in                         header
 // @name                       Authorization
 // @description                Вставьте токен в формате: Bearer <ваш_токен>
+// @model transport_http.ErrorResponse
 func main() {
 	ctx, cancel := signal.NotifyContext(
 		context.Background(),
@@ -103,12 +108,16 @@ func main() {
 
 	logger.Debug("Initializing echo router")
 	router := transport_http_echo_router.New(mc)
-	echoRouter := router.NewRouter(logger.Logger, []transport_http_echo_router.HTTPHandler{
+	echoRouter, err := router.NewRouter(logger.Logger, []transport_http_echo_router.HTTPHandler{
 		usersTransport,
 		authTransport,
 		chatTransport,
 		pagesTransport,
 	})
+	if err != nil {
+		logger.Error("new echo router: ", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
 
 	logger.Debug("Initializing HTTP server")
 	serverCfg := transport_http_server.NewConfigMust()

@@ -12,14 +12,14 @@ import (
 // SignUpUser godoc
 // @Summary      Регистрация нового пользователя
 // @Description  Создает новую учетную запись пользователя
-// @Tags         users
+// @Tags         auth
 // @Accept       json
 // @Produce      json
 // @Param        request   body      SignUpRequest  true  "Данные регистрации"
 // @Success      201  {object}  AuthResponse "Успешная регистрация"
-// @Failure      400  {object}  transport_http.ErrorResponse "Неверный запрос"
-// @Failure      409  {object}  transport_http.ErrorResponse "Пользователь уже существует"
-// @Failure 	 500  {object}  transport_http.ErrorResponse "Ошибка сервера"
+// @Failure      400  {object}  ValidationErrorResponse "Неверный запрос"
+// @Failure      409  {object}  ErrorResponse "Пользователь уже существует"
+// @Failure 	 500  {object}  ErrorResponse "Ошибка сервера"
 // @Router       /sign-up [post]
 func (h *HTTPHandler) SignUp(c *echo.Context) error {
 	var request SignUpRequest
@@ -33,7 +33,7 @@ func (h *HTTPHandler) SignUp(c *echo.Context) error {
 	}
 
 	if err := c.Validate(request); err != nil {
-		return fmt.Errorf("validate: %w", transport_http.ParseValidateError(err))
+		return fmt.Errorf("validate: %w", err)
 	}
 
 	domainUser := domain.NewUninitializedUser(request.FullName, request.Login)
@@ -49,10 +49,6 @@ func (h *HTTPHandler) SignUp(c *echo.Context) error {
 
 	access := pair.Access
 	refresh := pair.Refresh
-
-	if err != nil {
-		return fmt.Errorf("get refresh token expires: %w", err)
-	}
 
 	cookie := transport_http.NewCookie(
 		"refresh_token",

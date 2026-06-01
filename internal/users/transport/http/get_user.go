@@ -18,9 +18,9 @@ import (
 // @Security     BearerAuth
 // @Param        id        path      int true                     "Идентификатор пользователя"
 // @Success      200       {object}  UserDTOResponse              "Данные пользователя"
-// @Failure      401       {object}  transport_http.ErrorResponse "Неавторизованный запрос"
-// @Failure      404       {object}  transport_http.ErrorResponse "Пользователь не найден"
-// @Failure 	 500       {object}  transport_http.ErrorResponse "Ошибка сервера"
+// @Failure      401       {object}  ErrorResponse "Неавторизованный запрос"
+// @Failure      404       {object}  ErrorResponse "Пользователь не найден"
+// @Failure 	 500       {object}  ErrorResponse "Ошибка сервера"
 // @Router       /users/{id} [get]
 func (h *HTTPHandler) GetUser(c *echo.Context) error {
 	idParam := c.Param("id")

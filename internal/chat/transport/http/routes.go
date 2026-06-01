@@ -9,8 +9,8 @@ func (h *HTTPHandler) Routes(mc transport_http.MiddlewaresContainer) []echo.Rout
 	return []echo.Route{
 		{
 			Method:  "GET",
-			Path:    "/history",
-			Handler: h.GetMessages,
+			Path:    "/chat/history",
+			Handler: h.GetHistory,
 			Middlewares: []echo.MiddlewareFunc{
 				mc.HeaderAuth,
 			},

@@ -1,13 +1,28 @@
 basePath: /
 definitions:
-  github_com_egorkto_Chat-go_internal_transport_http.ErrorResponse:
+  github_com_egorkto_Chat-go_internal_chat_transport.MessageDTO:
     properties:
-      error:
-        example: error details
+      id:
+        type: integer
+      send_at:
         type: string
-      message:
-        example: failed to proccess request
+      sender:
+        $ref: '#/definitions/github_com_egorkto_Chat-go_internal_chat_transport.UserDTO'
+      text:
         type: string
+      vesion:
+        type: integer
+    type: object
+  github_com_egorkto_Chat-go_internal_chat_transport.UserDTO:
+    properties:
+      full_name:
+        type: string
+      id:
+        type: integer
+      login:
+        type: string
+      version:
+        type: integer
     type: object
   internal_auth_jwt_transport_http.AuthResponse:
     properties:
@@ -16,6 +31,12 @@ definitions:
         type: string
       user:
         $ref: '#/definitions/internal_auth_jwt_transport_http.UserDTO'
+    type: object
+  internal_auth_jwt_transport_http.ErrorResponse:
+    properties:
+      message:
+        example: error message
+        type: string
     type: object
   internal_auth_jwt_transport_http.LogInRequest:
     properties:
@@ -65,15 +86,43 @@ definitions:
         example: 1
         type: integer
     type: object
+  internal_auth_jwt_transport_http.ValidationErrorResponse:
+    properties:
+      details:
+        additionalProperties:
+          type: string
+        example:
+          field: validation error message
+        type: object
+      message:
+        example: error message
+        type: string
+    type: object
+  internal_chat_transport_http.ErrorResponse:
+    properties:
+      message:
+        example: error message
+        type: string
+    type: object
+  internal_users_transport_http.ErrorResponse:
+    properties:
+      message:
+        example: error message
+        type: string
+    type: object
   internal_users_transport_http.UserDTOResponse:
     properties:
       full_name:
+        example: John Doe
         type: string
       id:
+        example: 1
         type: integer
       login:
+        example: johndoe
         type: string
       version:
+        example: 1
         type: integer
     type: object
 host: localhost:5845
@@ -85,6 +134,65 @@ info:
   title: Chat API
   version: "0.1"
 paths:
+  /chat/connect:
+    get:
+      description: Подключает пользователя к чату
+      responses:
+        "101":
+          description: Успешное подключение
+        "401":
+          description: Неавторизованный запрос
+          schema:
+            $ref: '#/definitions/internal_chat_transport_http.ErrorResponse'
+        "404":
+          description: Пользователь не найден
+          schema:
+            $ref: '#/definitions/internal_chat_transport_http.ErrorResponse'
+        "500":
+          description: Ошибка сервера
+          schema:
+            $ref: '#/definitions/internal_chat_transport_http.ErrorResponse'
+      security:
+      - QueryAuth: []
+      summary: Подключение к чату
+      tags:
+      - chat
+  /chat/history:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает историю сообщений в чате
+      parameters:
+      - description: Лимит сообщений
+        in: query
+        name: limit
+        type: integer
+      - description: Смещение
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Данные пользователя
+          schema:
+            items:
+              $ref: '#/definitions/github_com_egorkto_Chat-go_internal_chat_transport.MessageDTO'
+            type: array
+        "401":
+          description: Неавторизованный запрос
+          schema:
+            $ref: '#/definitions/internal_chat_transport_http.ErrorResponse'
+        "500":
+          description: Ошибка сервера
+          schema:
+            $ref: '#/definitions/internal_chat_transport_http.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получение истории чата
+      tags:
+      - chat
   /log-in:
     post:
       consumes:
@@ -107,18 +215,18 @@ paths:
         "400":
           description: Неверный запрос
           schema:
-            $ref: '#/definitions/github_com_egorkto_Chat-go_internal_transport_http.ErrorResponse'
+            $ref: '#/definitions/internal_auth_jwt_transport_http.ValidationErrorResponse'
         "404":
           description: Пользователь не найден
           schema:
-            $ref: '#/definitions/github_com_egorkto_Chat-go_internal_transport_http.ErrorResponse'
+            $ref: '#/definitions/internal_auth_jwt_transport_http.ErrorResponse'
         "500":
           description: Ошибка сервера
           schema:
-            $ref: '#/definitions/github_com_egorkto_Chat-go_internal_transport_http.ErrorResponse'
+            $ref: '#/definitions/internal_auth_jwt_transport_http.ErrorResponse'
       summary: Авторизация пользователя
       tags:
-      - users
+      - auth
   /refresh:
     post:
       consumes:
@@ -134,14 +242,14 @@ paths:
         "401":
           description: Неавторизованный запрос
           schema:
-            $ref: '#/definitions/github_com_egorkto_Chat-go_internal_transport_http.ErrorResponse'
+            $ref: '#/definitions/internal_auth_jwt_transport_http.ErrorResponse'
         "500":
           description: Ошибка сервера
           schema:
-            $ref: '#/definitions/github_com_egorkto_Chat-go_internal_transport_http.ErrorResponse'
+            $ref: '#/definitions/internal_auth_jwt_transport_http.ErrorResponse'
       summary: Обновление токена
       tags:
-      - users
+      - auth
   /sign-up:
     post:
       consumes:
@@ -164,18 +272,18 @@ paths:
         "400":
           description: Неверный запрос
           schema:
-            $ref: '#/definitions/github_com_egorkto_Chat-go_internal_transport_http.ErrorResponse'
+            $ref: '#/definitions/internal_auth_jwt_transport_http.ValidationErrorResponse'
         "409":
           description: Пользователь уже существует
           schema:
-            $ref: '#/definitions/github_com_egorkto_Chat-go_internal_transport_http.ErrorResponse'
+            $ref: '#/definitions/internal_auth_jwt_transport_http.ErrorResponse'
         "500":
           description: Ошибка сервера
           schema:
-            $ref: '#/definitions/github_com_egorkto_Chat-go_internal_transport_http.ErrorResponse'
+            $ref: '#/definitions/internal_auth_jwt_transport_http.ErrorResponse'
       summary: Регистрация нового пользователя
       tags:
-      - users
+      - auth
   /users/{id}:
     get:
       consumes:
@@ -197,15 +305,15 @@ paths:
         "401":
           description: Неавторизованный запрос
           schema:
-            $ref: '#/definitions/github_com_egorkto_Chat-go_internal_transport_http.ErrorResponse'
+            $ref: '#/definitions/internal_users_transport_http.ErrorResponse'
         "404":
           description: Пользователь не найден
           schema:
-            $ref: '#/definitions/github_com_egorkto_Chat-go_internal_transport_http.ErrorResponse'
+            $ref: '#/definitions/internal_users_transport_http.ErrorResponse'
         "500":
           description: Ошибка сервера
           schema:
-            $ref: '#/definitions/github_com_egorkto_Chat-go_internal_transport_http.ErrorResponse'
+            $ref: '#/definitions/internal_users_transport_http.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Получение пользователя
@@ -216,5 +324,10 @@ securityDefinitions:
     description: 'Вставьте токен в формате: Bearer <ваш_токен>'
     in: header
     name: Authorization
+    type: apiKey
+  QueryAuth:
+    description: Вставьте токен
+    in: query
+    name: token
     type: apiKey
 swagger: "2.0"

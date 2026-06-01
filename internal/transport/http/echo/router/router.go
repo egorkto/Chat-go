@@ -1,12 +1,12 @@
 package transport_http_echo_router
 
 import (
+	"fmt"
 	"log/slog"
 
 	transport_http "github.com/egorkto/Chat-go/internal/transport/http"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
-	"github.com/presbrey/pkg/echovalidator"
 )
 
 type Router struct {
@@ -23,15 +23,19 @@ type HTTPHandler interface {
 	Routes(mc transport_http.MiddlewaresContainer) []echo.Route
 }
 
-func (r Router) NewRouter(log *slog.Logger, handlers []HTTPHandler) *echo.Echo {
+func (r Router) NewRouter(log *slog.Logger, handlers []HTTPHandler) (*echo.Echo, error) {
 	e := echo.New()
 
 	e.Logger = log
 
-	e.Validator = echovalidator.New()
-
 	e.Use(getRequestLoggerMiddleware())
 	e.Use(middleware.Recover())
+
+	reqVal, err := NewRequestValidator()
+	if err != nil {
+		return nil, fmt.Errorf("new request validator: %w", err)
+	}
+	e.Validator = reqVal
 
 	e.HTTPErrorHandler = HTTPErrorHandler
 
@@ -42,7 +46,7 @@ func (r Router) NewRouter(log *slog.Logger, handlers []HTTPHandler) *echo.Echo {
 
 	addMany(e, routes)
 
-	return e
+	return e, nil
 }
 
 func getRequestLoggerMiddleware() echo.MiddlewareFunc {

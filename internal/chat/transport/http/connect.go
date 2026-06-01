@@ -7,6 +7,16 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
+// Connect godoc
+// @Summary      Подключение к чату
+// @Description  Подключает пользователя к чату
+// @Tags         chat
+// @Security QueryAuth
+// @Success      101                               "Успешное подключение"
+// @Failure      401       {object}  ErrorResponse "Неавторизованный запрос"
+// @Failure		 404       {object}  ErrorResponse "Пользователь не найден"
+// @Failure 	 500       {object}  ErrorResponse "Ошибка сервера"
+// @Router       /chat/connect [get]
 func (h HTTPHandler) Connect(c *echo.Context) error {
 	userID, ok := c.Get("id").(int)
 	if !ok {
