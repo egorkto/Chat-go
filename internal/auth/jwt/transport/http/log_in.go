@@ -12,14 +12,14 @@ import (
 // LogInUser godoc
 // @Summary      Авторизация пользователя
 // @Description  Авторизирует существующего пользователя
-// @Tags         users
+// @Tags         auth
 // @Accept       json
 // @Produce      json
 // @Param        request   body      LogInRequest  true           "Данные авторизации"
 // @Success      200       {object}  AuthResponse                "Успешная авторизация"
-// @Failure      400       {object}  transport_http.ErrorResponse "Неверный запрос"
-// @Failure		 404       {object}  transport_http.ErrorResponse "Пользователь не найден"
-// @Failure 	 500       {object}  transport_http.ErrorResponse "Ошибка сервера"
+// @Failure      400       {object}  ValidationErrorResponse "Неверный запрос"
+// @Failure		 404       {object}  ErrorResponse "Пользователь не найден"
+// @Failure 	 500       {object}  ErrorResponse "Ошибка сервера"
 // @Router       /log-in [post]
 func (h *HTTPHandler) LogIn(c *echo.Context) error {
 	var request LogInRequest
@@ -33,7 +33,7 @@ func (h *HTTPHandler) LogIn(c *echo.Context) error {
 	}
 
 	if err := c.Validate(request); err != nil {
-		return fmt.Errorf("validate: %w", transport_http.ParseValidateError(err))
+		return fmt.Errorf("validate: %w", err)
 	}
 
 	user, pair, err := h.service.LogIn(

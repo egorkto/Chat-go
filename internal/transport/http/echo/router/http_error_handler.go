@@ -10,11 +10,6 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
-type ErrorResponse struct {
-	Message string      `json:"message"`
-	Details interface{} `json:"details"`
-}
-
 func HTTPErrorHandler(c *echo.Context, hErr error) {
 	if hErr == nil {
 		return
@@ -29,21 +24,26 @@ func HTTPErrorHandler(c *echo.Context, hErr error) {
 		return
 	}
 
-	var response ErrorResponse
+	var errResponse transport_http.ErrorResponse
 	var code int
 
 	var coder echo.HTTPStatusCoder
 	if errors.As(hErr, &coder) {
 		code = coder.StatusCode()
-		response.Message = http.StatusText(code)
+		errResponse.Message = http.StatusText(code)
 	} else {
-		response.Message = transport_http.GetHumanized(hErr)
 		code = transport_http.ErrorToHTTPCode(hErr)
+		errResponse.Message = transport_http.GetHumanized(hErr)
 	}
+
+	var response interface{}
 
 	var valErr domain.ValidationError
 	if errors.As(hErr, &valErr) {
-		response.Details = valErr.Errors
+		response = transport_http.ValidationErrorResponse{
+			ErrorResponse: errResponse,
+			Details:       valErr.Errors,
+		}
 	}
 
 	if code >= 400 && code < 500 {

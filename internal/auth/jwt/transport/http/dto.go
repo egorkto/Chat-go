@@ -1,6 +1,9 @@
 package auth_jwt_transport_http
 
-import "github.com/egorkto/Chat-go/internal/domain"
+import (
+	"github.com/egorkto/Chat-go/internal/domain"
+	transport_http "github.com/egorkto/Chat-go/internal/transport/http"
+)
 
 type SignUpRequest struct {
 	FullName string `json:"full_name" validate:"required,min=3,max=100" example:"Иван Иванов"`
@@ -34,3 +37,6 @@ func responseFromDomain(u domain.User, accessToken string) AuthResponse {
 		AccessToken: accessToken,
 	}
 }
+
+type ErrorResponse = transport_http.ErrorResponse
+type ValidationErrorResponse = transport_http.ValidationErrorResponse

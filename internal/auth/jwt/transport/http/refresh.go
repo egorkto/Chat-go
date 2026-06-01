@@ -12,12 +12,12 @@ import (
 // Refresh godoc
 // @Summary      Обновление токена
 // @Description  Возвращает новые access и refresh токены
-// @Tags         users
+// @Tags         auth
 // @Accept       json
 // @Produce      json
 // @Success      200       {object}  string                       "Обновленный access токен"
-// @Failure      401       {object}  transport_http.ErrorResponse "Неавторизованный запрос"
-// @Failure 	 500       {object}  transport_http.ErrorResponse "Ошибка сервера"
+// @Failure      401       {object}  ErrorResponse "Неавторизованный запрос"
+// @Failure 	 500       {object}  ErrorResponse "Ошибка сервера"
 // @Router       /refresh [post]
 func (h *HTTPHandler) Refresh(c *echo.Context) error {
 	refreshToken, err := c.Cookie("refresh_token")

@@ -15,7 +15,20 @@ const (
 	defaultOffset = 0
 )
 
-func (h HTTPHandler) GetMessages(c *echo.Context) error {
+// GetHistory godoc
+// @Summary      Получение истории чата
+// @Description  Возвращает историю сообщений в чате
+// @Tags         chat
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        limit     query     int false       "Лимит сообщений"
+// @Param        offset    query     int false       "Смещение"
+// @Success      200       {object}  GetHistoryResponse "Данные пользователя"
+// @Failure      401       {object}  ErrorResponse   "Неавторизованный запрос"
+// @Failure 	 500       {object}  ErrorResponse   "Ошибка сервера"
+// @Router       /chat/history [get]
+func (h HTTPHandler) GetHistory(c *echo.Context) error {
 	limit := defaultLimit
 	offset := defaultOffset
 
