@@ -31,10 +31,17 @@ func (s ChatStorage) GetMessages(
 
 	models := make([]storage_postgres_gorm.MessageModel, sliceSize)
 
-	err := s.db.Preload("User").
+	getMessagesDesc := s.db.Model(&storage_postgres_gorm.MessageModel{}).
 		Order("sent_at DESC").
-		Limit(msgLimit).Offset(msgOffset).
-		Find(&models).Error
+		Limit(msgLimit).
+		Offset(msgOffset)
+
+	err := s.db.Preload("User").
+		Table("(?) as sub", getMessagesDesc).
+		Order("sent_at ASC").
+		Find(&models).
+		Error
+
 	if err != nil {
 		return []domain.Message{}, fmt.Errorf(
 			"find with message models: %w",

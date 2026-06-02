@@ -2,6 +2,7 @@ package transport_http_echo_router
 
 import (
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -36,7 +37,7 @@ func HTTPErrorHandler(c *echo.Context, hErr error) {
 		errResponse.Message = transport_http.GetHumanized(hErr)
 	}
 
-	var response interface{}
+	var response interface{} = errResponse
 
 	var valErr domain.ValidationError
 	if errors.As(hErr, &valErr) {
@@ -51,6 +52,8 @@ func HTTPErrorHandler(c *echo.Context, hErr error) {
 	} else {
 		c.Logger().Error("internal error", slog.String("err", hErr.Error()))
 	}
+
+	fmt.Printf("resp: %v", response)
 
 	if err := c.JSON(code, response); err != nil {
 		c.Logger().Error("json response", slog.String("err", err.Error()))

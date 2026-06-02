@@ -32,7 +32,7 @@ run-chat:
 	go mod tidy && \
 	go run ${PROJECT_ROOT}/cmd/chat/main.go
 
-deploy-chat:
+up-chat:
 	@docker compose up -d --build chat-app
 
 down-chat:

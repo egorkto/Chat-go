@@ -4,91 +4,305 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Авторизация</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@600;700&display=swap" rel="stylesheet">
     <style>
-        body { 
-            font-family: Arial, sans-serif;
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #0e0f13;
+            --surface: #16181f;
+            --surface-2: #1e2029;
+            --border: #2a2d38;
+            --border-focus: #6c63ff;
+            --accent: #6c63ff;
+            --accent-hover: #5a52e0;
+            --text: #eeeef0;
+            --text-muted: #7a7d8c;
+            --error: #ff5f6d;
+            --success: #3ecf8e;
+            --header-h: 58px;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+        }
+
+        header {
+            height: var(--header-h);
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
             align-items: center;
-            height: 100vh;
-            background-color: #f4f4f9;
-            margin: 0; 
+            justify-content: space-between;
+            padding: 0 28px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
-        .login-container { 
-            background: white;
-            padding: 30px; 
-            border-radius: 8px; 
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1); 
-            width: 100%; 
-            max-width: 350px;
+
+        .logo {
+            font-family: 'Syne', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+            text-decoration: none;
+            letter-spacing: -0.5px;
         }
-        h2 { 
-            margin-bottom: 20px; 
-            text-align: center; 
-            color: #333; 
+        .logo span { color: var(--accent); }
+
+        nav { display: flex; gap: 8px; }
+
+        .nav-btn {
+            padding: 7px 18px;
+            border-radius: 6px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.18s, color 0.18s, border-color 0.18s;
         }
-        .form-group {
-            margin-bottom: 15px; 
+        .nav-btn.outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
         }
-        label { 
-            display: block; 
-            margin-bottom: 5px; 
-            color: #666; 
+        .nav-btn.outline:hover { border-color: var(--accent); color: var(--accent); }
+        .nav-btn.filled {
+            background: var(--accent);
+            border: 1px solid var(--accent);
+            color: #fff;
         }
-        input { 
-            width: 100%; 
-            padding: 10px; 
-            border: 1px solid #ddd; 
-            border-radius: 4px; 
-            box-sizing: border-box; 
+        .nav-btn.filled:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+
+        main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 16px;
         }
-        button { 
-            width: 100%; 
-            padding: 10px; 
-            background-color: #007bff; 
-            color: white; 
-            border: none; 
-            border-radius: 4px; 
-            font-size: 16px; 
-            cursor: pointer; 
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 40px 36px;
+            width: 100%;
+            max-width: 380px;
+            animation: fadeUp 0.35s ease both;
         }
-        button:hover { 
-            background-color: #0056b3; 
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
+
+        .card-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+
+        .card-sub {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 28px;
+        }
+        .card-sub a { color: var(--accent); text-decoration: none; }
+        .card-sub a:hover { text-decoration: underline; }
+
+        .form-group { margin-bottom: 18px; }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            letter-spacing: 0.3px;
+        }
+
+        input {
+            width: 100%;
+            padding: 11px 14px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            transition: border-color 0.18s, box-shadow 0.18s;
+            outline: none;
+        }
+        input::placeholder { color: var(--text-muted); opacity: 0.6; }
+        input:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(108,99,255,0.15);
+        }
+        input.is-error { border-color: var(--error); }
+        input.is-error:focus { box-shadow: 0 0 0 3px rgba(255,95,109,0.15); }
+
+        .field-error {
+            display: none;
+            font-size: 12px;
+            color: var(--error);
+            margin-top: 5px;
+        }
+        .field-error.visible { display: block; }
+
+        .banner {
+            display: none;
+            padding: 11px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            border-left: 3px solid;
+        }
+        .banner.error   { background: rgba(255,95,109,0.1); border-color: var(--error);   color: var(--error); }
+        .banner.success { background: rgba(62,207,142,0.1); border-color: var(--success); color: var(--success); }
+        .banner.visible { display: block; }
+
+        .btn-submit {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.18s, transform 0.1s;
+            margin-top: 6px;
+            position: relative;
+        }
+        .btn-submit:hover { background: var(--accent-hover); }
+        .btn-submit:active { transform: scale(0.98); }
+        .btn-submit:disabled { opacity: 0.55; cursor: not-allowed; }
+
+        .btn-submit .spinner {
+            display: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.4);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .btn-submit.loading .spinner { display: block; }
+
+        @keyframes spin { to { transform: translateY(-50%) rotate(360deg); } }
     </style>
 </head>
 <body>
 
-<div class="login-container">
-    <h2>Авторизация</h2>
-    <form id="logInForm">
-        <div class="form-group">
-            <label for="username">Логин</label>
-            <input type="text" id="login" name="login" required placeholder="Введите логин">
-        </div>
-        <div class="form-group">
-            <label for="password">Пароль</label>
-            <input type="password" id="password" name="password" required placeholder="Введите пароль">
-        </div>
-        <button type="submit">Войти</button>
-    </form>
-</div>
+<header>
+    <a href="/" class="logo">Чат<span>•</span></a>
+    <nav>
+        <a href="/log-in" class="nav-btn filled">Войти</a>
+        <a href="/sign-up" class="nav-btn outline">Регистрация</a>
+    </nav>
+</header>
+
+<main>
+    <div class="card">
+        <div class="card-title">Добро пожаловать</div>
+        <div class="card-sub">Нет аккаунта? <a href="/sign-up">Создать</a></div>
+
+        <div id="banner" class="banner"></div>
+
+        <form id="logInForm" novalidate>
+            <div class="form-group">
+                <label for="login">Логин</label>
+                <input type="text" id="login" name="login" placeholder="Введите логин" autocomplete="username">
+                <div class="field-error" id="err-login"></div>
+            </div>
+            <div class="form-group">
+                <label for="password">Пароль</label>
+                <input type="password" id="password" name="password" placeholder="Введите пароль" autocomplete="current-password">
+                <div class="field-error" id="err-password"></div>
+            </div>
+            <button type="submit" class="btn-submit" id="submitBtn">
+                Войти
+                <span class="spinner"></span>
+            </button>
+        </form>
+    </div>
+</main>
 
 <script>
-document.getElementById('logInForm').addEventListener('submit', async function(e) {
+const form      = document.getElementById('logInForm');
+const banner    = document.getElementById('banner');
+const submitBtn = document.getElementById('submitBtn');
+
+function setFieldError(inputId, errId, message) {
+    const input = document.getElementById(inputId);
+    const err   = document.getElementById(errId);
+    if (message) {
+        input.classList.add('is-error');
+        err.textContent = message;
+        err.classList.add('visible');
+    } else {
+        input.classList.remove('is-error');
+        err.textContent = '';
+        err.classList.remove('visible');
+    }
+}
+
+function clearErrors() {
+    [['login','err-login'],['password','err-password']].forEach(([i,e]) => setFieldError(i, e, ''));
+    banner.className = 'banner';
+    banner.textContent = '';
+}
+
+function showBanner(type, text) {
+    banner.className = `banner ${type} visible`;
+    banner.textContent = text;
+}
+
+function validate(data) {
+    let ok = true;
+    if (!data.login.trim()) {
+        setFieldError('login', 'err-login', 'Введите логин'); ok = false;
+    }
+    if (!data.password) {
+        setFieldError('password', 'err-password', 'Введите пароль'); ok = false;
+    }
+    return ok;
+}
+
+form.addEventListener('submit', async function(e) {
     e.preventDefault();
+    clearErrors();
 
     const data = {
-        login: document.getElementById('login').value,
+        login:    document.getElementById('login').value,
         password: document.getElementById('password').value
     };
+
+    if (!validate(data)) return;
+
+    submitBtn.disabled = true;
+    submitBtn.classList.add('loading');
 
     try {
         const response = await fetch('/log-in', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
 
@@ -97,17 +311,34 @@ document.getElementById('logInForm').addEventListener('submit', async function(e
         if (response.ok) {
             if (result.access_token) {
                 localStorage.setItem('access_token', result.access_token);
-                alert('Авторизация успешна! Токен сохранен.');
+                showBanner('success', 'Авторизация успешна! Перенаправление…');
+                setTimeout(() => window.location.href = '/', 900);
             } else {
-                alert('Ошибка: сервер не прислал токен в ответе.');
+                showBanner('error', 'Ошибка: сервер не прислал токен.');
             }
         } else {
-            alert('Ошибка авторизации: ' + (result.message || response.statusText));
+            if (result.errors && typeof result.errors === 'object') {
+                Object.entries(result.errors).forEach(([field, msg]) => {
+                    if (field === 'login')    setFieldError('login', 'err-login', msg);
+                    else if (field === 'password') setFieldError('password', 'err-password', msg);
+                });
+            } else {
+                showBanner('error', result.message || 'Неверный логин или пароль.');
+            }
         }
-    } catch (error) {
-        console.error('Ошибка:', error);
-        alert('Не удалось отправить запрос');
+    } catch {
+        showBanner('error', 'Не удалось подключиться к серверу.');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('loading');
     }
+});
+
+['login','password'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+        const errMap = {'login':'err-login','password':'err-password'};
+        setFieldError(id, errMap[id], '');
+    });
 });
 </script>
 </body>
